@@ -1,0 +1,39 @@
+#!/bin/bash
+# vim:tw=0:ts=2:sw=2:et:norl:nospell:ft=bash
+# Author: Landon Bouma (landonb &#x40; retrosoft &#x2E; com)
+# Project: https://github.com/thegittinsgood/git-update-faithful#⛲
+# License: MIT
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
+source_deps () {
+  insist_cmd 'realpath'
+
+  . "$(dirname "$(realpath "$0")")/../lib/update-faithful.sh"
+}
+
+insist_cmd () {
+  local cmdname="$1"
+
+  command -v "${cmdname}" > /dev/null && return 0
+
+  >&2 echo "ERROR: Missing system command ‘${cmdname}’."
+
+  exit 1
+}
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
+main () {
+  source_deps
+
+  UPDEPS_CACHE_FILE="${UPDEPS_CACHE_BASE}$PPID"
+
+  update-faithful-finish "$@"
+}
+
+main "$@"
+unset -f main
+unset -f source_deps
+unset -f insist_cmd
+
