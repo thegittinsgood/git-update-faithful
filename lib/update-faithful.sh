@@ -927,6 +927,7 @@ print_tmpl_src_data () {
 
   local project_name=""
   local project_url=""
+  local coc_contact_email=""
 
   project_name="$(
     tomlq -r .tool.poetry.name pyproject.toml
@@ -935,11 +936,16 @@ print_tmpl_src_data () {
     tomlq -r .tool.poetry.homepage pyproject.toml
   )"
 
+  coc_contact_email="$(
+    tomlq -r .tool.git_update_faithful.coc_contact_email pyproject.toml
+  )"
+
   echo "\
 {
     \"project\": {
         \"name\": \"${project_name}\",
-        \"url\": \"${project_url}\"
+        \"url\": \"${project_url}\",
+        \"coc_contact_email\": \"${coc_contact_email}\"
     }
 }"
 }
