@@ -162,7 +162,9 @@ must_pass_checks_and_ensure_cache () {
   local canon_file_absolute="$2"
   local local_file="$3"
 
-  must_git_nothing_staged_or_faithful_update_underway
+  local is_update_begin=false
+  [ -n "${local_file}" ] || is_update_begin=true
+  must_git_nothing_or_only_deletes_staged_or_faithful_update_underway ${is_update_begin}
 
   cache_file_ensure_exists
 
@@ -185,10 +187,29 @@ must_pass_checks_and_ensure_cache () {
 
 # ***
 
-must_git_nothing_staged_or_faithful_update_underway () {
+must_git_nothing_or_only_deletes_staged_or_faithful_update_underway () {
+  local is_update_begin="$1"
+
   ( git_nothing_staged \
     || cache_file_nonempty \
   ) && return 0
+
+  # Something is staged, and cache file not started, so this is
+  # first update-faithful. If only deletes staged, we assume user
+  # git-rm'd divergent files and wants to commit with updates (as
+  # opposed to committing git-rm files, running update-faithful,
+  # then squashing the two commits).
+  if ! git_nothing_staged && git_only_delete_files_staged; then
+    # So that we only print the alert once, skip on update-faithful-begin.
+    if ! ${is_update_begin}; then
+      warn "ALERT: Starting update-faithful on a repo with deletes staged."
+      info "- These files will be incorporated into the update-faithful commit:"
+
+      git_print_staged_files
+    fi
+
+    return 0
+  fi
 
   local projpath="${1:-$(pwd)}"
 
@@ -202,6 +223,14 @@ must_git_nothing_staged_or_faithful_update_underway () {
 
 git_nothing_staged () {
   git diff --cached --quiet
+}
+
+git_only_delete_files_staged () {
+  [ -z "$(git diff --cached --name-status | sed '/^D\t/d')" ]
+}
+
+git_print_staged_files () {
+  git --no-pager diff --cached --name-only
 }
 
 # ***
@@ -634,6 +663,9 @@ update_local_from_canon () {
   local success=false
 
   if [ ! -e "${local_file}" ]; then
+    # Note you can `git rm "${local_file}"` and not git-commit,
+    # then run update-faithful operation, and it'll commit changes
+    # to canon file.
     copy_canon_version "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}"
 
     _stage_follower "baptised"
