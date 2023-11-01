@@ -928,8 +928,12 @@ print_tmpl_src_data () {
   local project_name=""
   local project_url=""
 
-  project_name="$(tomlq -r .tool.poetry.name pyproject.toml)"
-  project_url="$(tomlq -r .tool.poetry.homepage pyproject.toml)"
+  project_name="$(
+    tomlq -r .tool.poetry.name pyproject.toml
+  )"
+  project_url="$(
+    tomlq -r .tool.poetry.homepage pyproject.toml
+  )"
 
   echo "\
 {
@@ -1097,9 +1101,11 @@ update_faithful_finish () {
       if test -n "${UPDEPS_GIT_RM_F_LIST}"; then
         cleanup_git_cpyst="
                                       git rm -f ${UPDEPS_GIT_RM_F_LIST}
-                                      git commit -m \"Deps: Temporarily expunge divergent faithfuls
-
-- These files will be restored in the next commit\""
+                                      # Optional: git-commit. Or just run update-faithful next.
+                                      printf \"%s\\\n\\\n%s\" \\
+                                        \"Deps: Temporarily expunge divergent faithfuls\" \\
+                                        \"- These files will be restored in the next commit.\" \\
+                                        | git commit -F -"
       fi
       info
       info "    - If you wanna just replace all the conflicts, eh:
