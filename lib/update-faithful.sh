@@ -907,7 +907,7 @@ render_document_from_template () {
   local src_data="$(mktemp -t ${UPDEPS_VENV_PREFIX}XXXX)"
   local src_format="json"
 
-  print_tmpl_src_data > "${src_data}"
+  print_tmpl_src_data "${canon_base_absolute}" > "${src_data}"
 
   # ***
 
@@ -935,6 +935,8 @@ render_document_from_template () {
 # ***
 
 print_tmpl_src_data () {
+  local canon_base_absolute="$1"
+
   venv_install_yq
 
   local project_name=""
@@ -948,9 +950,19 @@ print_tmpl_src_data () {
     tomlq -r .tool.poetry.homepage pyproject.toml
   )"
 
+  # Fallback canon pyproject.toml for missing values.
+
   coc_contact_email="$(
-    tomlq -r .tool.git_update_faithful.coc_contact_email pyproject.toml
+    tomlq -r --exit-status .tool.git_update_faithful.coc_contact_email pyproject.toml
   )"
+
+  if [ $? -ne 0 ]; then
+    coc_contact_email="$(
+      cd "${canon_base_absolute}"
+
+      tomlq -r .tool.git_update_faithful.coc_contact_email pyproject.toml
+    )"
+  fi
 
   echo "\
 {
