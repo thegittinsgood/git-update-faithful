@@ -137,8 +137,14 @@ update_faithful_file () {
 
   # ***
 
-  must_pass_checks_and_ensure_cache \
-    "${canon_base_absolute}" "${canon_file_absolute}" "${local_file}"
+  local success=true
+
+  if ${success} && ! must_pass_checks_and_ensure_cache \
+    "${canon_base_absolute}" "${canon_file_absolute}" "${local_file}" \
+  ; then
+    # Soft-fail.
+    success=false
+  fi
 
   # ***
 
@@ -156,12 +162,23 @@ update_faithful_file () {
 
   # ***
 
-  if ! examine_and_update_local_from_canon \
-    "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" \
-  ; then
-    git reset HEAD > /dev/null
+  local canon_head
+  canon_head="$(print_canon_scoped_head "${canon_file_absolute}")"
 
-    # Note that failed call called cache_file_mark_failed.
+  if ${success} && ! examine_and_update_local_from_canon \
+    "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" \
+  ; then
+    success=false
+  fi
+
+  if ! ${success}; then
+    # Skip `cache_file_cleanup`, but mark failed, so caller can continue
+    # calling update-faithful-file and eventually update-faithful-finish.
+    # Then all the successes and failures are printed in one go, and the
+    # user can fix everything and will find success on their second run.
+    cache_file_mark_failed "${canon_head}" "${canon_file_absolute}"
+
+    git reset HEAD > /dev/null
 
     return 1
   fi
@@ -184,6 +201,19 @@ must_pass_checks_and_ensure_cache () {
 
   if [ -n "${canon_file_absolute}" ]; then
     must_be_file "${canon_file_absolute}" "reference"
+
+    if [ -n "$(
+      cd "${canon_base_absolute}"
+
+      git status --porcelain=v1 -- "${canon_file_absolute}"
+    )" ]; then
+      # If we don't exit here, user sees "Cannot update changed and divergent follower file"
+      # message (warn_diverged_and_uncommitted) which is misleading when it's the canon file's
+      # fault, not follower's.
+      >&2 error "ERROR: The canon reference file has uncommitted changes: “${canon_file_absolute}”"
+
+      return 1
+    fi
   fi
 
   if [ -n "${local_file}" ]; then
@@ -291,13 +321,11 @@ examine_and_update_local_from_canon () {
   local local_file="$1"
   local canon_file_absolute="$2"
   local canon_file_relative="$3"
+  local canon_head="$4"
 
-  local canon_head
   local local_changed=false
   local local_strayed=false
   local local_matches_HEAD=false
-
-  canon_head="$(print_canon_scoped_head "${canon_file_absolute}")"
 
   insist_canon_head_consistent "${canon_head}" "${canon_file_absolute}"
 
@@ -763,14 +791,6 @@ update_local_from_canon () {
         fi
       fi
     fi
-  fi
-
-  if ! ${success}; then
-    # Skip `cache_file_cleanup`, but mark failed, so caller can continue
-    # calling update-faithful-file and eventually update-faithful-finish.
-    # Then all the successes and failures are printed in one go, and the
-    # user can fix everything and will find success on their second run.
-    cache_file_mark_failed "${canon_head}" "${canon_file_absolute}"
   fi
 
   ${success} && return 0
