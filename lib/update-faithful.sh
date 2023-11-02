@@ -82,11 +82,23 @@ insist_cmd () {
 source_dep () {
   local dep_path="$1"
 
-  # This file at bin/update-faithful, so project root is one level up.
+  # The executables are at bin/*, so project root is one level up.
   local project_root
   project_root="$(dirname "$(realpath "$0")")/.."
 
   local dep_path="${project_root}/${dep_path}"
+
+  if [ ! -f "${dep_path}" ]; then
+    # Or maybe user is trying to source from their terminal.
+    if $(printf %s "$0" | grep -q -E '(^-?|\/)(ba|da|fi|z)?sh$' -); then
+      if [ -n "${BASH_SOURCE[0]}" ]; then
+        # The lib is at lib/update-faithful.sh so project root is one level up.
+        project_root="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.."
+      fi
+    fi
+
+    dep_path="${project_root}/${dep_path}"
+  fi
 
   if [ ! -f "${dep_path}" ]; then
     >&2 echo "ERROR: Could not identify update-faithful dependency path."
