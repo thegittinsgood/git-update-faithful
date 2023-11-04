@@ -120,9 +120,9 @@ config values; another managers terminal I/O; another simply wraps `appdirs`;
 etc.). Each of the EAPP-derived projects share a common set of files, like
 `Makefile`, `.codecov.yml`, etc., and even GitHub Action scripts, under
 `.github/workflows/`. So all I need to do is to edit the source EAPP file,
-and then I `cd` to each derived project and run the `update-deps` script:
+and then I `cd` to each derived project and run the `update-faithful` script:
 
-- https://github.com/doblabs/easy-as-pypi/blob/release/bin/update-deps
+- https://github.com/doblabs/easy-as-pypi/blob/release/bin/update-faithful
 
 ### Git-Put-Wise Compatible
 
@@ -146,7 +146,7 @@ within the project directory.
 
 - I.e., you cannot `cp update-faithful-file ~/.local/bin` and expect it to work.
 
-  But you can `ln -s "$(realpath "update-deps")" ~/.local/bin` and it'll work.
+  But you can `ln -s "$(realpath "update-faithful")" ~/.local/bin` and it'll work.
 
 ## Compares to
 
