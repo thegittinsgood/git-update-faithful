@@ -1186,7 +1186,7 @@ update_faithful_finish () {
 
       local canon_base_absolute="$(cache_file_read_canon_base_absolute)"
 
-      commit_changes "${cached_head}" "${canon_base_absolute}"
+      update_faithfuls_commit_changes "${cached_head}" "${canon_base_absolute}"
 
       info
       info "└── Finished update-faithful operation ─── Changes committed!"
@@ -1233,7 +1233,7 @@ update_faithful_finish () {
 
 # ***
 
-commit_changes () {
+update_faithfuls_commit_changes () {
   local cached_head="$1"
   local canon_base_absolute="$2"
 
