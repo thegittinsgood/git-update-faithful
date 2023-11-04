@@ -59,7 +59,7 @@ source_dep_git_put_wise () {
 
   local put_wise_bin="$(dirname "$(realpath "$(command -v git-put-wise)")")"
 
-  # CXREF: https://github.com/landonb/sh-git-nubs
+  # CXREF: https://github.com/landonb/sh-git-nubs#🌰
   #   ~/.kit/sh/sh-git-nubs/bin/git-nubs.sh
   . "${put_wise_bin}/../deps/sh-git-nubs/bin/git-nubs.sh"
 
@@ -1188,9 +1188,11 @@ Deps: Update faithfuls
     | git commit -q -F -
 }
 
-# Deps: Update faithfuls
+# The latest update-faithful commit looks something like this:
 #
-# - Source: easy-as-pypi @ 0477f4de66eb35f15f651af906dfb0936a2089a1
+#   Deps: Update faithfuls
+#
+#   - Source: easy-as-pypi @ 0477f4de66eb35f15f651af906dfb0936a2089a1
 latest_commit_read_canon_head () {
   local local_file="$1"
 
