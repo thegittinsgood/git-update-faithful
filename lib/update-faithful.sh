@@ -944,8 +944,14 @@ render_document_from_template () {
 
   # ***
 
-  must_pass_checks_and_ensure_cache \
-    "${canon_base_absolute}" "${canon_tmpl_absolute}" "${dst_file}"
+  if ! must_pass_checks_and_ensure_cache \
+    "${canon_base_absolute}" "${canon_tmpl_absolute}" "${dst_file}" \
+  ; then
+    # Only fails if canon file has changes (if anything else wrong, exited).
+    handle_failed_state "${canon_head}" "${canon_tmpl_absolute}"
+
+    return 1
+  fi
 
   # ***
 
