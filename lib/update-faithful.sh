@@ -996,7 +996,7 @@ print_tmpl_src_data () {
 
 # ***
 
-UPDEPS_VENV_PREFIX="update-deps-venv-"
+UPDEPS_VENV_PREFIX="update-faithful-venv-"
 
 venv_activate_and_prepare () {
   # If Python environment looks like one we created, we're good.
