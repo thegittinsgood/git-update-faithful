@@ -172,13 +172,7 @@ update_faithful_file () {
   fi
 
   if ! ${success}; then
-    # Skip `cache_file_cleanup`, but mark failed, so caller can continue
-    # calling update-faithful-file and eventually update-faithful-finish.
-    # Then all the successes and failures are printed in one go, and the
-    # user can fix everything and will find success on their second run.
-    cache_file_mark_failed "${canon_head}" "${canon_file_absolute}"
-
-    git reset HEAD > /dev/null
+    handle_failed_state "${canon_head}" "${canon_file_absolute}"
 
     return 1
   fi
@@ -1201,6 +1195,21 @@ latest_commit_read_canon_head () {
     | tail -1 \
     | sed '/^- Source: .* @ /!d' \
     | sed 's/^- Source: .* @ //'
+}
+
+# ***
+
+handle_failed_state () {
+  local canon_head="$1"
+  local canon_file_absolute="$2"
+
+  # Skip `cache_file_cleanup`, but mark failed, so caller can continue
+  # calling update-faithful-file and eventually update-faithful-finish.
+  # Then all the successes and failures are printed in one go, and the
+  # user can fix everything and will find success on their second run.
+  cache_file_mark_failed "${canon_head}" "${canon_file_absolute}"
+
+  git reset HEAD > /dev/null
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
