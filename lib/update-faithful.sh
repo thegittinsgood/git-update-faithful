@@ -46,7 +46,8 @@ set_logger_log_level () {
   [ -n "${UF_LOG_LEVEL}" ] \
     && ! [ ${UF_LOG_LEVEL} -eq ${UF_LOG_LEVEL} ] \
     && >&2 echo "WARNING: Resetting UF_LOG_LEVEL, not an integer" \
-    && export UF_LOG_LEVEL=
+    && export UF_LOG_LEVEL= \
+      || true
   # Default log level: Debug and higher.
   LOG_LEVEL=${UF_LOG_LEVEL:-${LOG_LEVEL_DEBUG}}
 }
@@ -55,7 +56,7 @@ set_logger_log_level () {
 #   https://github.com/DepoXy/git-put-wise#🥨
 source_dep_git_put_wise () {
   command -v git-put-wise > /dev/null \
-    || return
+    || return 0
 
   local put_wise_bin="$(dirname "$(realpath "$(command -v git-put-wise)")")"
 
