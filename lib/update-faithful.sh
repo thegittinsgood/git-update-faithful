@@ -86,30 +86,39 @@ source_dep () {
   local project_root
   project_root="$(dirname "$(realpath "$0")")/.."
 
-  local dep_path="${project_root}/${dep_path}"
+  local try_prj_root="${project_root}"
+  local try_dep_path="${try_prj_root}/${dep_path}"
 
-  if [ ! -f "${dep_path}" ]; then
+  # Walkie talkie die hard.
+  while [ ! -f "${try_dep_path}" ]; do
+    test "$(dirname "${try_prj_root}")" = "${try_prj_root}" \
+      && break
+
+    try_prj_root="$(dirname "${try_prj_root}")"
+    try_dep_path="${try_prj_root}/${dep_path}"
+  done
+
+  if [ ! -f "${try_dep_path}" ]; then
     # Or maybe user is trying to source from their terminal.
     if $(printf %s "$0" | grep -q -E '(^-?|\/)(ba|da|fi|z)?sh$' -); then
       if [ -n "${BASH_SOURCE[0]}" ]; then
         # The lib is at lib/update-faithful.sh so project root is one level up.
         project_root="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.."
+        try_dep_path="${project_root}/${dep_path}"
       fi
     fi
-
-    dep_path="${project_root}/${dep_path}"
   fi
 
-  if [ ! -f "${dep_path}" ]; then
+  if [ ! -f "${try_dep_path}" ]; then
     >&2 echo "ERROR: Could not identify update-faithful dependency path."
     >&2 echo "- Hint: Did you *copy* bin/update-faithful.sh somewhere on PATH?"
     >&2 echo "  - Please use a symlink instead."
-    >&2 echo "- Our incorrect dependency path guess: “${dep_path}”"
+    >&2 echo "- Our incorrect dependency path guess: “${project_root}/${dep_path}”"
 
     exit 1
   fi
 
-  . "${dep_path}"
+  . "${try_dep_path}"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
