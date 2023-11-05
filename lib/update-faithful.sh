@@ -921,8 +921,14 @@ remove_faithful_file () {
     return 1
   fi
 
+  # What's an eight-letter word for something to be removed that's already
+  # removed? Like, it wasn't there in the first place. Considering amongst
+  # absentee, departed, ethereal, deceased, vanished, decedent, not many
+  # obvious options. Forgo, refrain from, go without. Foregone, went w/out.
   local what_happn="foregone"
+
   if [ -f "${local_file}" ]; then
+    # This 8-letter word is easier. The file perished. Becuz we perished it.
     what_happn="perished"
 
     git rm -q "${local_file}"
