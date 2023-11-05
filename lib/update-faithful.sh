@@ -935,12 +935,12 @@ render-faithful-file () {
 }
 
 render_document_from_template () {
-  local dst_file="$1"
+  local local_file="$1"
   # Akin to update-faithful-file's canon_file_relative, the relative
   # path to the template file from the canon project directory. If
   # this is just the name of the destination file with a .tmpl ext,
   # it's optional.
-  local canon_tmpl_relative="${2:-${dst_file%.*}.tmpl}"
+  local canon_tmpl_relative="${2:-${local_file%.*}.tmpl}"
   # Usually caller sets UPDEPS_CANON_BASE_ABSOLUTE before first update
   # operation, or sends path to update-faithful-begin, which sets it.
   local canon_base_absolute="${3:-${UPDEPS_CANON_BASE_ABSOLUTE}}"
@@ -955,7 +955,7 @@ render_document_from_template () {
   # ***
 
   if ! must_pass_checks_and_ensure_cache \
-    "${canon_base_absolute}" "${canon_tmpl_absolute}" "${dst_file}" \
+    "${canon_base_absolute}" "${canon_tmpl_absolute}" "${local_file}" \
   ; then
     # Only fails if canon file has changes (if anything else wrong, exited).
     handle_failed_state "${canon_head}" "${canon_tmpl_absolute}"
@@ -998,7 +998,7 @@ render_document_from_template () {
     "${temp_tmpl}" \
     "${src_data}" \
     --format=${src_format} \
-      > "${dst_file}"
+      > "${local_file}"
 
   command rm "${temp_tmpl}"
   command rm "${src_data}"
@@ -1010,7 +1010,7 @@ render_document_from_template () {
   # Stage the generated file. If template and source data was unchanged,
   # nothing is staged.
 
-  stage_follower "${dst_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
+  stage_follower "${local_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
 }
 
 # ***
