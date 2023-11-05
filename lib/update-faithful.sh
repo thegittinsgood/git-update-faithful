@@ -827,6 +827,17 @@ copy_canon_version () {
   command cp -f \
     <(canon_path_show_at_canon_head "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}") \
     "${local_file}"
+
+  apply_canon_permissions_to_follower "${local_file}" "${canon_file_absolute}"
+}
+
+# Note this fcn. not called if only permissions changed, but file contents
+# did not. Remove the local file and run again, should fix it.
+apply_canon_permissions_to_follower () {
+  local local_file="$1"
+  local canon_file_absolute="$2"
+
+  command chmod --reference="${canon_file_absolute}" "${local_file}"
 }
 
 stage_follower () {
@@ -1002,6 +1013,8 @@ render_document_from_template () {
 
   command rm "${temp_tmpl}"
   command rm "${src_data}"
+
+  apply_canon_permissions_to_follower "${local_file}" "${canon_tmpl_absolute}"
 
   # ***
 
