@@ -159,6 +159,9 @@ update_faithful_file () {
 
   # ***
 
+  ! report_done_if_symlink "${local_file}" \
+    || return 0
+
   ! report_done_if_same_file "${local_file}" "${canon_file_absolute}" \
     || return 0
 
@@ -333,6 +336,21 @@ report_done_if_same_file () {
 
   if [ "${local_file_realpath}" = "${canon_file_realpath}" ]; then
     local what_happn="is canon"
+
+    print_update_faithful_progress_info "${local_file}" "${what_happn}"
+
+    return 0
+  fi
+
+  return 1
+}
+
+# We don't clobber symlinks (assume user knows what they're doing).
+report_done_if_symlink () {
+  local local_file="$1"
+
+  if [ -h "${local_file}" ]; then
+    local what_happn="isa link"
 
     print_update_faithful_progress_info "${local_file}" "${what_happn}"
 
@@ -998,6 +1016,9 @@ render_document_from_template () {
 
     return 1
   fi
+
+  ! report_done_if_symlink "${local_file}" \
+    || return 0
 
   # For UX purposes, so these few seconds happen at start of updates,
   # callers generally use update-faithful-begin to activate the venv,
