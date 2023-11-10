@@ -159,17 +159,8 @@ update_faithful_file () {
 
   # ***
 
-  # If update-faithful called on a canon project file itself, skip it.
-  local local_file_realpath="$(realpath "${local_file}")"
-  local canon_file_realpath="$(realpath "${canon_file_absolute}")"
-
-  if [ "${local_file_realpath}" = "${canon_file_realpath}" ]; then
-    local what_happn="is canon"
-
-    print_update_faithful_progress_info "${local_file}" "${what_happn}"
-
-    return 0
-  fi
+  ! report_done_if_same_file "${local_file}" "${canon_file_absolute}" \
+    || return 0
 
   # ***
 
@@ -327,6 +318,28 @@ must_be_file_or_absent () {
   local absent_ok=true
 
   must_be_file "$1" "$2" ${absent_ok}
+}
+
+# ***
+
+# If update-faithful called on a canon project file itself, skip it.
+report_done_if_same_file () {
+  local local_file="$1"
+  local canon_file_absolute="$2"
+
+  # If update-faithful called on a canon project file itself, skip it.
+  local local_file_realpath="$(realpath "${local_file}")"
+  local canon_file_realpath="$(realpath "${canon_file_absolute}")"
+
+  if [ "${local_file_realpath}" = "${canon_file_realpath}" ]; then
+    local what_happn="is canon"
+
+    print_update_faithful_progress_info "${local_file}" "${what_happn}"
+
+    return 0
+  fi
+
+  return 1
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
