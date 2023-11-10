@@ -988,12 +988,61 @@ render_document_from_template () {
   # Note that jinja2 won't do process substitution (Bash's <(some-cmd) syntax),
   # because `os.path.isfile(filename)` returns False on named pipes, e.g., on
   # '/dev/fd/63' (Ref: `get_source` in jinja2/loaders.py). So use a temp file.
+  # - To support {% extends <relative-path> %} tags, we'll use a temp directory
+  #   and recreate the original file names and path (using scoped file versions
+  #   per git-wise).
 
-  local temp_tmpl="$(mktemp -t ${UPDEPS_VENV_PREFIX}XXXX)"
+  local tmp_source_dir
+  tmp_source_dir="$(mktemp -d -t ${UPDEPS_VENV_PREFIX}XXXX)"
+
+  local tmp_tmpl_absolute="${tmp_source_dir}/${canon_tmpl_relative}"
+
+  command mkdir -p "$(dirname "${tmp_tmpl_absolute}")"
 
   canon_path_show_at_canon_head "${canon_tmpl_absolute}" "${canon_tmpl_relative}" "${canon_head}" \
-    > "${temp_tmpl}"
+    > "${tmp_tmpl_absolute}"
 
+  # Look for {% extends %} tags and make templates available locally.
+  # - Note that using an absolute path doesn't work, e.g.,
+  #   jinja2.exceptions.TemplateNotFound: /absolute/path/to/foo.tmpl
+  # - REFER: "The extends tag should be the first tag in the template."
+  #   https://jinja.palletsprojects.com/en/3.1.x/templates/#child-template
+
+  local ascending=true
+
+  while ${ascending}; do
+    local child_tmpl_relative=""
+
+    local tmp_tmpl_header="$(head -1 "${tmp_tmpl_absolute}")"
+    local extends_tag_maybe="$(
+      echo "${tmp_tmpl_header}" | sed "s/^{% *extends *['\"]\(.*\)['\"] %}\$/\1/"
+    )"
+
+    if [ "${tmp_tmpl_header}" != "${extends_tag_maybe}" ]; then
+      child_tmpl_relative="${extends_tag_maybe}"
+    fi
+
+    if [ -z "${child_tmpl_relative}" ]; then
+      ascending=false
+    else
+      local action_preamble="Template file"
+      local what_happn="prepared"
+
+      info " ${action_preamble} $(font_emphasize "${what_happn}")" \
+        "$(font_highlight "$(realpath -s "${child_tmpl_relative}")")"
+
+      local canon_child_absolute="${canon_base_absolute}/${child_tmpl_relative}"
+
+      local tmp_child_absolute="${tmp_source_dir}/${child_tmpl_relative}"
+
+      tmp_tmpl_absolute="${tmp_child_absolute}"
+
+      command mkdir -p "$(dirname "${tmp_child_absolute}")"
+
+      canon_path_show_at_canon_head "${canon_child_absolute}" "${child_tmpl_relative}" "${canon_head}" \
+        > "${tmp_child_absolute}"
+    fi
+  done
 
   # Generate the source data JSON file.
 
@@ -1006,13 +1055,15 @@ render_document_from_template () {
 
   # E.g.,
   #   jinja2 helloworld.tmpl data.json --format=json
+  # echo "jinja2 \"${canon_tmpl_relative}\" \"${src_data}\" --format=${src_format}"
   jinja2 \
-    "${temp_tmpl}" \
+    "${canon_tmpl_relative}" \
     "${src_data}" \
     --format=${src_format} \
       > "${local_file}"
 
-  command rm "${temp_tmpl}"
+  command rm -rf "${tmp_source_dir}"
+
   command rm "${src_data}"
 
   # ***
