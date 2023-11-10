@@ -969,8 +969,6 @@ render_document_from_template () {
 
   insist_canon_head_consistent "${canon_head}" "${canon_tmpl_absolute}"
 
-  # ***
-
   if ! must_pass_checks_and_ensure_cache \
     "${canon_base_absolute}" "${canon_tmpl_absolute}" "${local_file}" \
   ; then
@@ -980,8 +978,6 @@ render_document_from_template () {
     return 1
   fi
 
-  # ***
-
   # For UX purposes, so these few seconds happen at start of updates,
   # callers generally use update-faithful-begin to activate the venv,
   # and this call is a fallback in case they didn't.
@@ -989,7 +985,7 @@ render_document_from_template () {
 
   # ***
 
-  # Not that jinja2 won't do process substitution (Bash's <(some-cmd) syntax),
+  # Note that jinja2 won't do process substitution (Bash's <(some-cmd) syntax),
   # because `os.path.isfile(filename)` returns False on named pipes, e.g., on
   # '/dev/fd/63' (Ref: `get_source` in jinja2/loaders.py). So use a temp file.
 
@@ -998,7 +994,6 @@ render_document_from_template () {
   canon_path_show_at_canon_head "${canon_tmpl_absolute}" "${canon_tmpl_relative}" "${canon_head}" \
     > "${temp_tmpl}"
 
-  # ***
 
   # Generate the source data JSON file.
 
@@ -1007,7 +1002,7 @@ render_document_from_template () {
 
   print_tmpl_src_data "${canon_base_absolute}" > "${src_data}"
 
-  # ***
+  # Render the template.
 
   # E.g.,
   #   jinja2 helloworld.tmpl data.json --format=json
@@ -1019,6 +1014,8 @@ render_document_from_template () {
 
   command rm "${temp_tmpl}"
   command rm "${src_data}"
+
+  # ***
 
   apply_canon_permissions_to_follower "${local_file}" "${canon_tmpl_absolute}"
 
