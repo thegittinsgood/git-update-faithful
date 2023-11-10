@@ -12,8 +12,10 @@ UPDEPS_CACHE_BASE="${UPDEPS_CACHE_BASE:-${UPDEPS_CACHE_DIR:-.git}/ohmyrepos-upda
 # The cache contains PID of process or parent, depending.
 UPDEPS_CACHE_FILE="${UPDEPS_CACHE_FILE:-${UPDEPS_CACHE_BASE}$$}"
 
-# Call either sets this directly or passes to update-faithful-begin.
+# Call either set these directly or pass to update-faithful-begin.
 UPDEPS_CANON_BASE_ABSOLUTE="${UPDEPS_CANON_BASE_ABSOLUTE}"
+UPDEPS_TMPL_SRC_DATA="${UPDEPS_TMPL_SRC_DATA}"
+UPDEPS_TMPL_SRC_FORMAT="${UPDEPS_TMPL_SRC_FORMAT}"
 
 # ***
 
@@ -1084,27 +1086,31 @@ render_document_from_template () {
     fi
   done
 
-  # Generate the source data JSON file.
+  # Caller is responsible for generating and providing source data.
 
-  local src_data="$(mktemp -t ${UPDEPS_VENV_PREFIX}XXXX)"
-  local src_format="json"
-
-  print_tmpl_src_data "${canon_base_absolute}" > "${src_data}"
+  local src_data_and_format=""
+  if [ -n "${UPDEPS_TMPL_SRC_DATA}" ]; then
+    # Meh: Not spaces-in-the-file-path strong.
+    src_data_and_format="${UPDEPS_TMPL_SRC_DATA} --format=${UPDEPS_TMPL_SRC_FORMAT:-json}"
+  else
+    warn "BWARE: No source data supplied. jinja2 will likely fail..."
+    warn "- Check that you passed a file path and format to update-faithful-begin"
+    warn "  or that you set UPDEPS_TMPL_SRC_DATA and maybe UPDEPS_TMPL_SRC_FORMAT"
+  fi
 
   # Render the template.
 
   # E.g.,
   #   jinja2 helloworld.tmpl data.json --format=json
-  # echo "jinja2 \"${canon_tmpl_relative}\" \"${src_data}\" --format=${src_format}"
+  #
+  #  echo "jinja2 \"${canon_tmpl_relative}\" ${src_data_and_format} > \"${local_file}\""
+
   jinja2 \
     "${canon_tmpl_relative}" \
-    "${src_data}" \
-    --format=${src_format} \
+    ${src_data_and_format} \
       > "${local_file}"
 
   command rm -rf "${tmp_source_dir}"
-
-  command rm "${src_data}"
 
   # ***
 
@@ -1118,48 +1124,6 @@ render_document_from_template () {
   # nothing is staged.
 
   stage_follower "${local_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
-}
-
-# ***
-
-print_tmpl_src_data () {
-  local canon_base_absolute="$1"
-
-  venv_install_yq
-
-  local project_name=""
-  local project_url=""
-  local coc_contact_email=""
-
-  project_name="$(
-    tomlq -r .tool.poetry.name pyproject.toml
-  )"
-  project_url="$(
-    tomlq -r .tool.poetry.homepage pyproject.toml
-  )"
-
-  # Fallback canon pyproject.toml for missing values.
-
-  coc_contact_email="$(
-    tomlq -r --exit-status .tool.git_update_faithful.coc_contact_email pyproject.toml
-  )"
-
-  if [ $? -ne 0 ]; then
-    coc_contact_email="$(
-      cd "${canon_base_absolute}"
-
-      tomlq -r .tool.git_update_faithful.coc_contact_email pyproject.toml
-    )"
-  fi
-
-  echo "\
-{
-    \"project\": {
-        \"name\": \"${project_name}\",
-        \"url\": \"${project_url}\",
-        \"coc_contact_email\": \"${coc_contact_email}\"
-    }
-}"
 }
 
 # ***
@@ -1262,6 +1226,8 @@ venv_install_yq () {
 update-faithful-begin () {
   local canon_base_absolute="${1:-UPDEPS_CANON_BASE_ABSOLUTE}"
   local skip_venv_activate="${2:-false}"
+  local tmpl_src_data="${3:-${UPDEPS_TMPL_SRC_DATA}}"
+  local tmpl_src_format="${4:-${UPDEPS_TMPL_SRC_FORMAT}}"
 
   if [ -n "${canon_base_absolute}" ]; then
     UPDEPS_CANON_BASE_ABSOLUTE="${canon_base_absolute:-/}"
@@ -1272,6 +1238,9 @@ update-faithful-begin () {
   if ! ${skip_venv_activate}; then
     venv_activate_and_prepare
   fi
+
+  UPDEPS_TMPL_SRC_DATA="${tmpl_src_data}"
+  UPDEPS_TMPL_SRC_FORMAT="${tmpl_src_format}"
 }
 
 # ***
