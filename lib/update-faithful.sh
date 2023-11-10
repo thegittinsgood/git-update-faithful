@@ -261,12 +261,10 @@ must_git_nothing_or_only_deletes_staged_or_faithful_update_underway () {
     return 0
   fi
 
-  local projpath="${1:-$(pwd)}"
-
   warn "ERROR: Cannot start update-faithful on a repo with staged changes."
   warn "- See for yourself:"
   warn "  "
-  warn "    cd \"${projpath}\" && git status"
+  warn "    cd \"$(pwd)\" && git status"
 
   exit 1
 }
