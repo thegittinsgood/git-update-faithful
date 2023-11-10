@@ -1096,7 +1096,8 @@ venv_activate_and_prepare () {
 # REFER: https://gist.github.com/cupdike/6a9caaf18f30250364c8fcf6d64ff22e
 # - BEGET: https://gist.github.com/csinchok/9714005
 venv_activate () {
-  local throwaway_dir=$(mktemp -d -t ${UPDEPS_VENV_PREFIX}XXXX)
+  local throwaway_dir
+  throwaway_dir=$(mktemp -d -t ${UPDEPS_VENV_PREFIX}XXXX)
 
   cd "${throwaway_dir}"
 
