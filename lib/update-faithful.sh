@@ -1026,17 +1026,72 @@ render_document_from_template () {
   # and this call is a fallback in case they didn't.
   venv_activate_and_prepare
 
-  # ***
-
-  # Note that jinja2 won't do process substitution (Bash's <(some-cmd) syntax),
-  # because `os.path.isfile(filename)` returns False on named pipes, e.g., on
-  # '/dev/fd/63' (Ref: `get_source` in jinja2/loaders.py). So use a temp file.
-  # - To support {% extends <relative-path> %} tags, we'll use a temp directory
-  #   and recreate the original file names and path (using scoped file versions
-  #   per git-wise).
+  # Localize template sources.
 
   local tmp_source_dir
   tmp_source_dir="$(mktemp -d -t ${UPDEPS_VENV_PREFIX}XXXX)"
+
+  render_template_localize_sources "${tmp_source_dir}" \
+    "${canon_tmpl_absolute}" "${canon_tmpl_relative}" \
+    "${canon_head}" "${canon_base_absolute}" 
+
+  # Caller is responsible for generating and providing source data.
+
+  local src_data_and_format=""
+  if [ -n "${UPDEPS_TMPL_SRC_DATA}" ]; then
+    # Meh: Not spaces-in-the-file-path strong.
+    src_data_and_format="${UPDEPS_TMPL_SRC_DATA} --format=${UPDEPS_TMPL_SRC_FORMAT:-json}"
+  else
+    warn "BWARE: No source data supplied. jinja2 will likely fail..."
+    warn "- Check that you passed a file path and format to update-faithful-begin"
+    warn "  or that you set UPDEPS_TMPL_SRC_DATA and maybe UPDEPS_TMPL_SRC_FORMAT"
+  fi
+
+  # Render the template.
+
+  # E.g.,
+  #   jinja2 helloworld.tmpl data.json --format=json
+  #
+  #  echo "jinja2 \"${canon_tmpl_relative}\" ${src_data_and_format} > \"${local_file}\""
+
+  jinja2 \
+    "${canon_tmpl_relative}" \
+    ${src_data_and_format} \
+      > "${local_file}"
+
+  command rm -rf "${tmp_source_dir}"
+
+  # ***
+
+  apply_canon_permissions_to_follower "${local_file}" "${canon_tmpl_absolute}"
+
+  # ***
+
+  local what_happn="rendered"
+
+  # Stage the generated file. If template and source data was unchanged,
+  # nothing is staged.
+
+  stage_follower "${local_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
+}
+
+# ***
+
+# Note that jinja1 won't do process substitution (Bash's <(some-cmd) syntax),
+# because `os.path.isfile(filename)` returns False on named pipes, e.g., on
+# '/dev/fd/62' (Ref: `get_source` in jinja2/loaders.py). So use a temp file
+# for the two inputs — template file, and source data — when generated at
+# runtime.
+# - To support {% extends <relative-path> %} tags, we'll use a temp directory
+#   and recreate the original file names and path (using scoped file versions
+#   per git-wise).
+
+render_template_localize_sources () {
+  local tmp_source_dir="$1"
+  local canon_tmpl_absolute="$2"
+  local canon_tmpl_relative="$3"
+  local canon_head="$4"
+  local canon_base_absolute="$5"
 
   local tmp_tmpl_absolute="${tmp_source_dir}/${canon_tmpl_relative}"
 
@@ -1084,48 +1139,7 @@ render_document_from_template () {
       print_progress_info_prepared_template "${child_tmpl_relative}"
     fi
   done
-
-  # Caller is responsible for generating and providing source data.
-
-  local src_data_and_format=""
-  if [ -n "${UPDEPS_TMPL_SRC_DATA}" ]; then
-    # Meh: Not spaces-in-the-file-path strong.
-    src_data_and_format="${UPDEPS_TMPL_SRC_DATA} --format=${UPDEPS_TMPL_SRC_FORMAT:-json}"
-  else
-    warn "BWARE: No source data supplied. jinja2 will likely fail..."
-    warn "- Check that you passed a file path and format to update-faithful-begin"
-    warn "  or that you set UPDEPS_TMPL_SRC_DATA and maybe UPDEPS_TMPL_SRC_FORMAT"
-  fi
-
-  # Render the template.
-
-  # E.g.,
-  #   jinja2 helloworld.tmpl data.json --format=json
-  #
-  #  echo "jinja2 \"${canon_tmpl_relative}\" ${src_data_and_format} > \"${local_file}\""
-
-  jinja2 \
-    "${canon_tmpl_relative}" \
-    ${src_data_and_format} \
-      > "${local_file}"
-
-  command rm -rf "${tmp_source_dir}"
-
-  # ***
-
-  apply_canon_permissions_to_follower "${local_file}" "${canon_tmpl_absolute}"
-
-  # ***
-
-  local what_happn="rendered"
-
-  # Stage the generated file. If template and source data was unchanged,
-  # nothing is staged.
-
-  stage_follower "${local_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
 }
-
-# ***
 
 print_progress_info_prepared_template () {
   local tmpl_relative="$1"
