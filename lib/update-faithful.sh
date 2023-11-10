@@ -855,6 +855,14 @@ stage_follower () {
     fi
     # else, remove-faithful-file ran git-rm.
 
+    if [ $? -ne 0 ]; then
+      # E.g., "fatal: pathspec 'foo/bar' is beyond a symbolic link".
+      >&2 error "ERROR: See message above: git-add failed"
+      >&2 error "  git add \"${local_file}\""
+
+      exit 1
+    fi
+
     # Cache the canon HEAD (it might already be cached, in which
     # case this recreates the cache file, with a new mod. date).
     cache_file_write "${canon_head}" "${canon_file_absolute}"
