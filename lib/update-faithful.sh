@@ -1031,7 +1031,10 @@ render_document_from_template () {
   local tmp_source_dir
   tmp_source_dir="$(mktemp -d -t ${UPDEPS_VENV_PREFIX}XXXX)"
 
-  render_template_localize_sources "${tmp_source_dir}" \
+  local tmp_tmpl_absolute="${tmp_source_dir}/${canon_tmpl_relative}"
+
+  render_template_localize_sources \
+    "${tmp_source_dir}" "${tmp_tmpl_absolute}" \
     "${canon_tmpl_absolute}" "${canon_tmpl_relative}" \
     "${canon_head}" "${canon_base_absolute}" 
 
@@ -1055,7 +1058,7 @@ render_document_from_template () {
   #  echo "jinja2 \"${canon_tmpl_relative}\" ${src_data_and_format} > \"${local_file}\""
 
   jinja2 \
-    "${canon_tmpl_relative}" \
+    "${tmp_tmpl_absolute}" \
     ${src_data_and_format} \
       > "${local_file}"
 
@@ -1088,12 +1091,11 @@ render_document_from_template () {
 
 render_template_localize_sources () {
   local tmp_source_dir="$1"
-  local canon_tmpl_absolute="$2"
-  local canon_tmpl_relative="$3"
-  local canon_head="$4"
-  local canon_base_absolute="$5"
-
-  local tmp_tmpl_absolute="${tmp_source_dir}/${canon_tmpl_relative}"
+  local tmp_tmpl_absolute="$2"
+  local canon_tmpl_absolute="$3"
+  local canon_tmpl_relative="$4"
+  local canon_head="$5"
+  local canon_base_absolute="$6"
 
   command mkdir -p "$(dirname "${tmp_tmpl_absolute}")"
 
@@ -1108,12 +1110,14 @@ render_template_localize_sources () {
   # - REFER: "The extends tag should be the first tag in the template."
   #   https://jinja.palletsprojects.com/en/3.1.x/templates/#child-template
 
+  local prev_tmpl_absolute="${tmp_tmpl_absolute}"
+
   local ascending=true
 
   while ${ascending}; do
     local child_tmpl_relative=""
 
-    local tmp_tmpl_header="$(head -1 "${tmp_tmpl_absolute}")"
+    local tmp_tmpl_header="$(head -1 "${prev_tmpl_absolute}")"
     local extends_tag_maybe="$(
       echo "${tmp_tmpl_header}" | sed "s/^{% *extends *['\"]\(.*\)['\"] %}\$/\1/"
     )"
@@ -1129,7 +1133,7 @@ render_template_localize_sources () {
 
       local tmp_child_absolute="${tmp_source_dir}/${child_tmpl_relative}"
 
-      tmp_tmpl_absolute="${tmp_child_absolute}"
+      prev_tmpl_absolute="${tmp_child_absolute}"
 
       command mkdir -p "$(dirname "${tmp_child_absolute}")"
 
