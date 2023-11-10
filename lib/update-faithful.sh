@@ -906,17 +906,18 @@ print_update_faithful_progress_info () {
   local local_file="$1"
   local what_happn="$2"
   local update_status="$3"
+  local action_preamble="$4"
 
   if [ -z "${update_status}" ]; then
     update_status="$(cache_file_read_update_status)"
   fi
 
-  local action_preamble=""
-
-  if ${update_status}; then
-    action_preamble="Follower file"
-  else
-    action_preamble="Would've been"
+  if [ -z "${action_preamble}" ]; then
+    if ${update_status}; then
+      action_preamble="Follower file"
+    else
+      action_preamble="Would've been"
+    fi
   fi
 
   info " ${action_preamble} $(font_emphasize "${what_happn}")" \
@@ -1044,6 +1045,8 @@ render_document_from_template () {
   canon_path_show_at_canon_head "${canon_tmpl_absolute}" "${canon_tmpl_relative}" "${canon_head}" \
     > "${tmp_tmpl_absolute}"
 
+  print_progress_info_prepared_template "${canon_tmpl_relative}"
+
   # Look for {% extends %} tags and make templates available locally.
   # - Note that using an absolute path doesn't work, e.g.,
   #   jinja2.exceptions.TemplateNotFound: /absolute/path/to/foo.tmpl
@@ -1067,12 +1070,6 @@ render_document_from_template () {
     if [ -z "${child_tmpl_relative}" ]; then
       ascending=false
     else
-      local action_preamble="Template file"
-      local what_happn="prepared"
-
-      info " ${action_preamble} $(font_emphasize "${what_happn}")" \
-        "$(font_highlight "$(realpath -s "${child_tmpl_relative}")")"
-
       local canon_child_absolute="${canon_base_absolute}/${child_tmpl_relative}"
 
       local tmp_child_absolute="${tmp_source_dir}/${child_tmpl_relative}"
@@ -1083,6 +1080,8 @@ render_document_from_template () {
 
       canon_path_show_at_canon_head "${canon_child_absolute}" "${child_tmpl_relative}" "${canon_head}" \
         > "${tmp_child_absolute}"
+
+      print_progress_info_prepared_template "${child_tmpl_relative}"
     fi
   done
 
@@ -1124,6 +1123,18 @@ render_document_from_template () {
   # nothing is staged.
 
   stage_follower "${local_file}" "${canon_head}" "${canon_tmpl_absolute}" "${what_happn}"
+}
+
+# ***
+
+print_progress_info_prepared_template () {
+  local tmpl_relative="$1"
+  
+  local action_preamble="Template file"
+  local what_happn="prepared"
+
+  print_update_faithful_progress_info "${tmpl_relative}" "${what_happn}" \
+    "" "${action_preamble}"
 }
 
 # ***
