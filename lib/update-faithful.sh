@@ -384,7 +384,7 @@ examine_and_update_local_from_canon () {
 
   # See if local file matches canon's HEAD version.
   local canon_head_private
-  canon_head_private="$(print_canon_head "${canon_file_absolute}")"
+  canon_head_private="$(print_head_sha "${canon_file_absolute}")"
 
   if [ "${canon_head}" != "${canon_head_private}" ]; then
     has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head_private}" \
@@ -406,12 +406,12 @@ examine_and_update_local_from_canon () {
 
 # ***
 
-print_canon_head () {
-  local canon_file_absolute="$1"
+print_head_sha () {
+  local any_repo_file_path="$1"
   local use_scoping="${2:-false}"
 
   (
-    cd "$(dirname "${canon_file_absolute}")"
+    cd "$(dirname "${any_repo_file_path}")"
 
     local canon_head="HEAD"
 
@@ -438,7 +438,7 @@ print_canon_scoped_head () {
 
   local use_scoping=true
 
-  print_canon_head "${canon_file_absolute}" "${use_scoping}"
+  print_head_sha "${canon_file_absolute}" "${use_scoping}"
 }
 
 # ***
