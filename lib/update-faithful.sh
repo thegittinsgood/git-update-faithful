@@ -434,11 +434,11 @@ print_head_sha () {
 }
 
 print_scoped_head () {
-  local canon_file_absolute="$1"
+  local any_repo_file_path="${1:-.}"
 
   local use_scoping=true
 
-  print_head_sha "${canon_file_absolute}" "${use_scoping}"
+  print_head_sha "${any_repo_file_path}" "${use_scoping}"
 }
 
 # ***
