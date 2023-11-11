@@ -1094,12 +1094,24 @@ render_template_localize_sources () {
   local canon_head="$5"
   local canon_base_absolute="$6"
 
+  local follower_head
+  follower_head="$(print_scoped_head)"
+
+  # Prefer local template, otherwise use canon's.
+  local chosen_tmpl_path="${canon_tmpl_absolute}"
+  local chosen_canon_head="${canon_head}"
+
+  if [ -f "${canon_tmpl_relative}" ]; then
+    chosen_tmpl_path="${canon_tmpl_relative}"
+    chosen_canon_head="${follower_head}"
+  fi
+
   command mkdir -p "$(dirname "${tmp_tmpl_absolute}")"
 
   canon_path_show_at_canon_head \
-    "${canon_tmpl_absolute}" \
+    "${chosen_tmpl_path}" \
     "${canon_tmpl_relative}" \
-    "${canon_head}" \
+    "${chosen_canon_head}" \
       > "${tmp_tmpl_absolute}"
 
   print_progress_info_prepared_template "${canon_tmpl_relative}"
@@ -1135,12 +1147,21 @@ render_template_localize_sources () {
 
       prev_tmpl_absolute="${tmp_child_absolute}"
 
+      # Prefer local template, otherwise use canon's.
+      local chosen_tmpl_path="${canon_child_absolute}"
+      local chosen_canon_head="${canon_head}"
+
+      if [ -f "${child_tmpl_relative}" ]; then
+        chosen_tmpl_path="${child_tmpl_relative}"
+        chosen_canon_head="${follower_head}"
+      fi
+
       command mkdir -p "$(dirname "${tmp_child_absolute}")"
 
       canon_path_show_at_canon_head \
-        "${canon_child_absolute}" \
+        "${chosen_tmpl_path}" \
         "${child_tmpl_relative}" \
-        "${canon_head}" \
+        "${chosen_canon_head}" \
           > "${tmp_child_absolute}"
 
       print_progress_info_prepared_template "${child_tmpl_relative}"
