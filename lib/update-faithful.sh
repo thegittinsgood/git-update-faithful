@@ -170,7 +170,7 @@ update_faithful_file () {
   # ***
 
   local canon_head
-  canon_head="$(print_canon_scoped_head "${canon_file_absolute}")"
+  canon_head="$(print_scoped_head "${canon_file_absolute}")"
 
   if ${success} && ! examine_and_update_local_from_canon \
     "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" \
@@ -433,7 +433,7 @@ print_head_sha () {
   )
 }
 
-print_canon_scoped_head () {
+print_scoped_head () {
   local canon_file_absolute="$1"
 
   local use_scoping=true
@@ -971,13 +971,13 @@ remove_faithful_file () {
     git rm -q "${local_file}"
   fi
 
-  # The calls below (print_canon_scoped_head and stage_follower) will only
+  # The calls below (print_scoped_head and stage_follower) will only
   # use the absolute file path to determine the absolute canon directory. I
   # know.
   local canon_fake_absolute="${canon_base_absolute}/ignored"
 
   local canon_head
-  canon_head="$(print_canon_scoped_head "${canon_fake_absolute}")"
+  canon_head="$(print_scoped_head "${canon_fake_absolute}")"
 
   stage_follower "${local_file}" "${canon_head}" "${canon_fake_absolute}" "${what_happn}"
 }
@@ -1002,7 +1002,7 @@ render_document_from_template () {
   local canon_tmpl_absolute="${canon_base_absolute}/${canon_tmpl_relative}"
 
   local canon_head
-  canon_head="$(print_canon_scoped_head "${canon_tmpl_absolute}")"
+  canon_head="$(print_scoped_head "${canon_tmpl_absolute}")"
 
   insist_canon_head_consistent "${canon_head}" "${canon_tmpl_absolute}"
 
