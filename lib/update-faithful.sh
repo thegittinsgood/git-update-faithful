@@ -1096,8 +1096,11 @@ render_template_localize_sources () {
 
   command mkdir -p "$(dirname "${tmp_tmpl_absolute}")"
 
-  canon_path_show_at_canon_head "${canon_tmpl_absolute}" "${canon_tmpl_relative}" "${canon_head}" \
-    > "${tmp_tmpl_absolute}"
+  canon_path_show_at_canon_head \
+    "${canon_tmpl_absolute}" \
+    "${canon_tmpl_relative}" \
+    "${canon_head}" \
+      > "${tmp_tmpl_absolute}"
 
   print_progress_info_prepared_template "${canon_tmpl_relative}"
 
@@ -1134,8 +1137,11 @@ render_template_localize_sources () {
 
       command mkdir -p "$(dirname "${tmp_child_absolute}")"
 
-      canon_path_show_at_canon_head "${canon_child_absolute}" "${child_tmpl_relative}" "${canon_head}" \
-        > "${tmp_child_absolute}"
+      canon_path_show_at_canon_head \
+        "${canon_child_absolute}" \
+        "${child_tmpl_relative}" \
+        "${canon_head}" \
+          > "${tmp_child_absolute}"
 
       print_progress_info_prepared_template "${child_tmpl_relative}"
     fi
