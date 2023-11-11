@@ -656,18 +656,15 @@ update_local_from_canon () {
     if git status --porcelain=v1 -- "${local_file}" | grep -q -e "^??"; then
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      command rm -f \"${local_file}\"
+                                      command rm \"${local_file}\"
                                       # Try again!
                                       $0"
 
       UPDEPS_CMD_RM_F_LIST+="${local_file} "
     else
-      # Erm, too provocative:
-      #   git commit -m \"Deps: Cleanse the unfaithful\"
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      git rm -f \"${local_file}\"
-                                      git commit -m \"Deps: Decontaminate divergent files\"
+                                      command rm \"${local_file}\"
                                       # Try again!
                                       $0"
 
@@ -1318,16 +1315,11 @@ update_faithful_finish () {
       local cleanup_git_cpyst""
       if test -n "${UPDEPS_CMD_RM_F_LIST}"; then
         cleanup_cmd_cpyst="
-                                      command rm -f ${UPDEPS_CMD_RM_F_LIST}"
+                                      command rm ${UPDEPS_CMD_RM_F_LIST}"
       fi
       if test -n "${UPDEPS_GIT_RM_F_LIST}"; then
         cleanup_git_cpyst="
-                                      git rm -f ${UPDEPS_GIT_RM_F_LIST}
-                                      # Optional: git-commit. Or just run update-faithful next.
-                                      printf \"%s\\\n\\\n%s\" \\
-                                        \"Deps: Temporarily expunge divergent faithfuls\" \\
-                                        \"- These files will be restored in the next commit.\" \\
-                                        | git commit -F -"
+                                      command rm ${UPDEPS_GIT_RM_F_LIST}"
       fi
       info
       info "    - If you wanna just replace all the conflicts, eh:
