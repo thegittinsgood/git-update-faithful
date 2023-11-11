@@ -1278,7 +1278,7 @@ venv_install_yq () {
 # call sets up the venv.
 update-faithful-begin () {
   local canon_base_absolute="${1:-UPDEPS_CANON_BASE_ABSOLUTE}"
-  local skip_venv_activate="${2:-false}"
+  local skip_venv_manage="${2:-false}"
   local tmpl_src_data="${3:-${UPDEPS_TMPL_SRC_DATA}}"
   local tmpl_src_format="${4:-${UPDEPS_TMPL_SRC_FORMAT}}"
 
@@ -1288,7 +1288,7 @@ update-faithful-begin () {
 
   must_pass_checks_and_ensure_cache "${UPDEPS_CANON_BASE_ABSOLUTE}" "" ""
 
-  if ! ${skip_venv_activate}; then
+  if ! ${skip_venv_manage}; then
     venv_activate_and_prepare
   fi
 
@@ -1304,6 +1304,7 @@ update-faithful-finish () {
 
 update_faithful_finish () {
   local sourcerer="$1"
+  local skip_venv_manage="${2:-false}"
 
   if ! cache_file_nonempty; then
     cache_file_cleanup
@@ -1357,7 +1358,9 @@ update_faithful_finish () {
     fi
   fi
 
-  venv_deactivate
+  if ! ${skip_venv_manage}; then
+    venv_deactivate
+  fi
 
   cache_file_cleanup
 }
