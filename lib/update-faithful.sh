@@ -31,7 +31,7 @@ DTRACE=false
 
 source_deps () {
   # Ensure coreutils installed (from Linux pkg mgr, or from macOS Homebrew).
-  insist_cmd 'realpath'
+  _upful_insist_cmd 'realpath'
 
   # Load the logger library, from github.com/landonb/sh-logger.
   # - Includes print commands: info, warn, error, debug.
@@ -75,7 +75,7 @@ source_dep_git_put_wise () {
 
 # ***
 
-insist_cmd () {
+_upful_insist_cmd () {
   local cmdname="$1"
 
   command -v "${cmdname}" > /dev/null && return 0
@@ -1453,5 +1453,4 @@ main () {
 main "$@"
 unset -f main
 unset -f source_deps
-unset -f insist_cmd
 
