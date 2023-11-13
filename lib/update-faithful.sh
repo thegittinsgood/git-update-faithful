@@ -1265,13 +1265,6 @@ venv_install_jinja2_cli () {
   #   python -m pip install jinja2-cli
 }
 
-# CXREF: `tomlq` from `yq`, a YAML/XML/TOML jq wrapper.
-#   https://github.com/kislyuk/yq
-#   https://kislyuk.github.io/yq/
-venv_install_yq () {
-  pip install -q yq
-}
-
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
 # It's not necessary to call this function, unless you
