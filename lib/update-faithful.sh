@@ -76,11 +76,11 @@ source_dep_git_put_wise () {
 # ***
 
 _upful_insist_cmd () {
-  local cmdname="$1"
+  local cmd_name="$1"
 
-  command -v "${cmdname}" > /dev/null && return 0
+  command -v "${cmd_name}" > /dev/null && return 0
 
-  >&2 echo "ERROR: Missing system command ‘${cmdname}’."
+  >&2 echo "ERROR: Missing system command ‘${cmd_name}’."
 
   exit 1
 }
