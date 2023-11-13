@@ -1186,12 +1186,38 @@ print_progress_info_prepared_template () {
 
 UPDEPS_VENV_PREFIX="update-faithful-venv-"
 
+UPDEPS_VENV_FORCE=${UPDEPS_VENV_FORCE:-false}
+
 venv_activate_and_prepare () {
+  local is_beginning=${1:-false}
+
+  local cmd_name="jinja2"
+
   # If Python environment looks like one we created, we're good.
   if python -c "import sys; sys.stdout.write(sys.prefix)" \
     | grep -q -e "${UPDEPS_VENV_PREFIX}" \
   ; then
+    if ${is_beginning}; then
+      info "Our Python venv verified"
+    fi
+
+    if ! (_upful_insist_cmd "${cmd_name}" 2> /dev/null); then
+      >&2 echo "ERROR: Unexpected path: Our venv, but no ‘${cmd_name}’?"
+
+      exit 1
+    fi
+
     return 0
+  fi
+
+  if ! ${UPDEPS_VENV_FORCE}; then
+    if (_upful_insist_cmd "${cmd_name}" 2> /dev/null); then
+      if ${is_beginning}; then
+        info "Using local $(font_emphasize "${cmd_name}") 💨"
+      fi
+
+      return 0
+    fi
   fi
 
   printf "%s" "Creating Python venv..."
@@ -1202,6 +1228,8 @@ venv_activate_and_prepare () {
 
   printf "\r"
   info "Activated Python venv"
+  debug "  └→ HINT: Avoid this wait with your own venv, and:"
+  debug "           pip install jinja2-cli"
 }
 
 # REFER: https://gist.github.com/cupdike/6a9caaf18f30250364c8fcf6d64ff22e
@@ -1285,7 +1313,9 @@ update-faithful-begin () {
   must_pass_checks_and_ensure_cache "${UPDEPS_CANON_BASE_ABSOLUTE}" "" ""
 
   if ! ${skip_venv_manage}; then
-    venv_activate_and_prepare
+    local is_beginning=true
+
+    venv_activate_and_prepare ${is_beginning}
   fi
 
   UPDEPS_TMPL_SRC_DATA="${tmpl_src_data}"
