@@ -636,6 +636,8 @@ update_local_from_canon () {
   local local_strayed=$7
   local local_matches_HEAD=$8
 
+  local short_head="$(git_sha_shorten "${canon_head}")"
+
   # ***
 
   warn_info_failing () {
@@ -647,9 +649,17 @@ update_local_from_canon () {
     info
   }
 
+  print_help_indented_scoped_meld () {
+    # This is not a simple "meld \"${local_file}\" \"${canon_file_absolute}\" &"
+    # because we need the scoped version of the canon file.
+    printf "%s"                      "( cd \"$(dirname "${canon_file_absolute}")\" \\
+                                        && meld \"$(pwd)/${local_file}\" \\
+                                           <(git show ${short_head}:\"${canon_file_relative}\") ) &"
+  }
+
   warn_usage_hint_add_meld_compare_cpyst () {
     UPDEPS_MELD_CMP_LIST+="
-                                      meld \"${local_file}\" \"${canon_file_absolute}\" &"
+                                      $(print_help_indented_scoped_meld)"
   }
 
   warn_usage_hint_delete_local_profit () {
@@ -685,7 +695,7 @@ update_local_from_canon () {
     warn " │ - Take a look for yourself:"
     warn " │   
                                     cd \"$(pwd -L)\"
-                                    meld \"${local_file}\" \"${canon_file_absolute}\" &"
+                                    $(print_help_indented_scoped_meld)"
 
     warn_info_failing
   }
@@ -702,7 +712,7 @@ update_local_from_canon () {
                                     # The latest commit has no reference SHA:
                                     git --no-pager log --format=%B -n 1 -- \"${local_file}\"
                                     # The local file is tidy but differs from source:
-                                    meld \"${local_file}\" \"${canon_file_absolute}\" &"
+                                    $(print_help_indented_scoped_meld)"
 
     warn_info_failing
   }
@@ -717,7 +727,7 @@ update_local_from_canon () {
     warn " │   
                                     cd \"$(pwd -L)\"
                                     # The local file is tidy but differs from source:
-                                    meld \"${local_file}\" \"${canon_file_absolute}\" &"
+                                    $(print_help_indented_scoped_meld)"
 
     warn_info_failing
   }
