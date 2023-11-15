@@ -27,6 +27,12 @@ DTRACE=false
 # DEV/YOU: Uncomment to spit trace to stderr.
 #  DTRACE=true
 
+# *** Overrideable but probably never will be
+
+UPDEPS_VENV_PREFIX="update-faithful-venv-"
+
+UPDEPS_VENV_FORCE=${UPDEPS_VENV_FORCE:-false}
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
 source_deps () {
@@ -1192,10 +1198,6 @@ print_progress_info_prepared_template () {
 }
 
 # ***
-
-UPDEPS_VENV_PREFIX="update-faithful-venv-"
-
-UPDEPS_VENV_FORCE=${UPDEPS_VENV_FORCE:-false}
 
 venv_activate_and_prepare () {
   local is_beginning=${1:-false}
