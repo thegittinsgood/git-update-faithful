@@ -591,7 +591,6 @@ has_no_diff () {
   fi
 
   local local_fullpath
-
   local_fullpath="$(realpath "${local_file}")"
 
   diff -q \
