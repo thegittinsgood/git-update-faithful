@@ -6,6 +6,23 @@
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
+# USAGE/2023-11-17: It's easier to source lib/update-faithful.sh
+# and to call the functions directory than you are calling these
+# shims (what's under bin/*), because you need to do extra work
+# in the latter case:
+# - If you use the shims, set UPDEPS_CANON_BASE_ABSOLUTE in the
+#   calling environment, because update-faithful-begin only persists
+#   it as an environ (and not, say, in cache). And because each shim
+#   runs as a separate process, they'll need to get environs from the
+#   caller.
+#   - Same for UPDEPS_TMPL_SRC_DATA and UPDEPS_TMPL_SRC_FORMAT if you
+#     call bin/render-faithful-file.
+# - BWARE: If you use the bin/render-faithful-file shim, it'll setup
+#   the venv every time, unless you initiate the venv in the caller
+#   before invoking the shim.
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
 source_deps () {
   insist_cmd 'realpath'
 
