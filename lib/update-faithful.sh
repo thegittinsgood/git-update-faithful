@@ -777,11 +777,11 @@ update_local_from_canon () {
 
   # ***
 
-  _stage_follower () (
+  _stage_follower () {
     local what_happn="$1"
 
     stage_follower "${local_file}" "${canon_head}" "${canon_file_absolute}" "${what_happn}"
-  )
+  }
 
   # ***
 
