@@ -104,7 +104,7 @@ You can see how this is implemented in the
 project [ohmyrepos](https://github.com/landonb/ohmyrepos#😤) (OMR)
 config:
 
-- https://github.com/DepoXy/depoxy/blob/release/home/.config/ohmyrepos/my-deps-manage-shoilerplate.sh
+- https://github.com/DepoXy/depoxy/blob/release/home/.kit/git/ohmyrepos/lib/my-deps-manage-shoilerplate.sh
 
 (Note that DepoXy is essentially a development environment orchestrator.
 I install it to all new dev machines, and it wires all my config and
