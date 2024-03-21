@@ -614,7 +614,15 @@ has_no_diff () {
     "${canon_head}" \
     "${tmp_canon_copy}"
 
-  diff -q "${local_fullpath}" "${tmp_canon_copy}" > /dev/null
+  local _has_no_diff=true
+
+  if ! diff -q "${local_fullpath}" "${tmp_canon_copy}" > /dev/null; then
+    _has_no_diff=false
+  fi
+
+  command rm -f -- "${tmp_canon_copy}"
+
+  ${_has_no_diff}
 }
 
 canon_path_show_at_canon_head () {
