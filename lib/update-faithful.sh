@@ -487,7 +487,7 @@ insist_canon_head_consistent () {
   >&2 error "  "
   >&2 error "   cd \"${projpath}\""
   >&2 error "   git reset HEAD"
-  >&2 error "   command rm \"${UPDEPS_CACHE_FILE}\""
+  >&2 error "   command rm -- \"${UPDEPS_CACHE_FILE}\""
 
   exit 1
 }
@@ -530,7 +530,7 @@ cache_file_cleanup () {
   if [ -d "$(dirname -- "${UPDEPS_CACHE_BASE}")" ] \
     && [ ! -e "${UPDEPS_CACHE_BASE}" ] \
   ; then
-    command rm -f "${UPDEPS_CACHE_BASE}"*
+    command rm -f -- "${UPDEPS_CACHE_BASE}"*
   fi
 }
 
@@ -704,7 +704,7 @@ update_local_from_canon () {
     if git status --porcelain=v1 -- "${local_file}" | grep -q -e "^??"; then
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      command rm \"${local_file}\"
+                                      command rm -- \"${local_file}\"
                                       # Try again!
                                       $0"
 
@@ -712,7 +712,7 @@ update_local_from_canon () {
     else
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      command rm \"${local_file}\"
+                                      command rm -- \"${local_file}\"
                                       # Try again!
                                       $0"
 
@@ -897,7 +897,7 @@ copy_canon_version () {
   # Delete previous file, in case it's a hard link to canon,
   # so that we don't overwrite canon with an earlier version.
   # - It's up to the caller to remake hard-links.
-  command rm -f "${local_file}"
+  command rm -f -- "${local_file}"
 
   local tmp_canon_copy
   tmp_canon_copy="$(mktemp -t ${UPDEPS_TEMP_PREFIX}XXXX)"
@@ -909,7 +909,7 @@ copy_canon_version () {
     "${canon_head}" \
     "${tmp_canon_copy}"
 
-  command mv -f "${tmp_canon_copy}" "${local_file}"
+  command mv -f -- "${tmp_canon_copy}" "${local_file}"
 
   apply_canon_permissions_to_follower "${local_file}" "${canon_file_absolute}"
 }
@@ -921,7 +921,7 @@ apply_canon_permissions_to_follower () {
   local canon_file_absolute="$2"
 
   # Copy file modes.
-  command chmod --reference="${canon_file_absolute}" "${local_file}"
+  command chmod --reference="${canon_file_absolute}" -- "${local_file}"
 }
 
 stage_follower () {
@@ -1117,7 +1117,7 @@ render_document_from_template () {
     ${src_data_and_format} \
       > "${local_file}"
 
-  command rm -rf "${tmp_source_dir}"
+  command rm -rf -- "${tmp_source_dir}"
 
   # ***
 
@@ -1301,7 +1301,7 @@ venv_activate () {
   # ALTLY:
   #   python3 -m pip install --upgrade --quiet pip
 
-  trap "command rm -rf \"${throwaway_dir}\"" EXIT
+  trap "command rm -rf -- \"${throwaway_dir}\"" EXIT
 
   cd - >/dev/null
 }
@@ -1423,11 +1423,11 @@ update_faithful_finish () {
       local cleanup_git_cpyst""
       if test -n "${UPDEPS_CMD_RM_F_LIST}"; then
         cleanup_cmd_cpyst="
-                                      command rm ${UPDEPS_CMD_RM_F_LIST}"
+                                      command rm -- ${UPDEPS_CMD_RM_F_LIST}"
       fi
       if test -n "${UPDEPS_GIT_RM_F_LIST}"; then
         cleanup_git_cpyst="
-                                      command rm ${UPDEPS_GIT_RM_F_LIST}"
+                                      command rm -- ${UPDEPS_GIT_RM_F_LIST}"
       fi
       info
       info "    - If you wanna just replace all the conflicts, eh:
