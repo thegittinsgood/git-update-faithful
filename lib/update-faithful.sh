@@ -1245,7 +1245,7 @@ venv_activate_and_prepare () {
   local cmd_name="jinja2"
 
   # If Python environment looks like one we created, we're good.
-  if python -c "import sys; sys.stdout.write(sys.prefix)" \
+  if python3 -c "import sys; sys.stdout.write(sys.prefix)" \
     | grep -q -e "${UPDEPS_VENV_PREFIX}" \
   ; then
     if ${is_beginning}; then
@@ -1299,7 +1299,7 @@ venv_activate () {
 
   pip install --upgrade -q pip
   # ALTLY:
-  #   python -m pip install --upgrade --quiet pip
+  #   python3 -m pip install --upgrade --quiet pip
 
   trap "command rm -rf \"${throwaway_dir}\"" EXIT
 
@@ -1342,7 +1342,7 @@ venv_install_jinja2_cli () {
     || true
 
   # ALTLY:
-  #   python -m pip install jinja2-cli
+  #   python3 -m pip install jinja2-cli
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
