@@ -74,8 +74,8 @@ source_dep_git_put_wise () {
   local put_wise_bin="$(dirname -- "$(realpath -- "$(command -v git-put-wise)")")"
 
   # CXREF: https://github.com/landonb/sh-git-nubs#🌰
-  #   ~/.kit/sh/sh-git-nubs/bin/git-nubs.sh
-  . "${put_wise_bin}/../deps/sh-git-nubs/bin/git-nubs.sh"
+  #   ~/.kit/sh/sh-git-nubs/lib/git-nubs.sh
+  . "${put_wise_bin}/../deps/sh-git-nubs/lib/git-nubs.sh"
 
   . "${put_wise_bin}/../lib/common_put_wise.sh"
   . "${put_wise_bin}/../lib/dep_apply_confirm_patch_base.sh"
