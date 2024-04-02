@@ -421,6 +421,10 @@ examine_and_update_local_from_canon () {
 
 # ***
 
+# MAYBE/2024-04-02: Replace this block (and possibly remove
+# GPW sourcing, `source_dep_git_put_wise`) and replace with
+# new `git put-wise --scope` command.
+# - But hey, this currently works, why rock the boat.
 print_head_sha () {
   local any_repo_file_path="$1"
   local use_scoping="${2:-false}"
