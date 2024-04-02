@@ -445,7 +445,7 @@ print_head_sha () {
     # deference so caller doesn't have to (and can call, e.g.,
     # git_sha_shorten).
 
-    printf "%s" "$(git rev-parse "${canon_head}")"
+    printf "%s" "$(git rev-parse --verify --end-of-options "${canon_head}")"
   )
 }
 
