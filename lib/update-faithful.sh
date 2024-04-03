@@ -1302,6 +1302,8 @@ venv_activate () {
   local throwaway_dir
   throwaway_dir=$(mktemp -d -t ${UPDEPS_VENV_PREFIX}--venv_activate--XXXX)
 
+  trap -- "command rm -rf -- \"${throwaway_dir}\"" EXIT
+
   cd "${throwaway_dir}"
 
   venv_deactivate
@@ -1313,8 +1315,6 @@ venv_activate () {
   pip install --upgrade -q pip
   # ALTLY:
   #   python3 -m pip install --upgrade --quiet pip
-
-  trap "command rm -rf -- \"${throwaway_dir}\"" EXIT
 
   cd - >/dev/null
 }
