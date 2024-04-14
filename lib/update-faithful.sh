@@ -987,7 +987,18 @@ print_update_faithful_progress_info () {
   fi
 
   info " ${action_preamble} $(font_emphasize "${what_happn}")" \
-    "$(font_highlight "$(realpath -s "${local_file}")")"
+    "$(font_highlight "$(realpath_s "${local_file}")")"
+}
+
+# All because macOS built-in does not support `realpath -s`.
+realpath_s () {
+  local local_file="$1"
+  
+  (
+    cd "$(dirname -- "${local_file}")"
+
+    printf "%s/%s" "$(pwd -L)" "$(basename -- "${local_file}")"
+  )
 }
 
 # ***
