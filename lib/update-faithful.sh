@@ -1333,7 +1333,6 @@ venv_activate () {
 }
 
 venv_deactivate () {
-  # Aka 'off'.
   type deactivate >/dev/null 2>&1 && deactivate || true
 }
 
