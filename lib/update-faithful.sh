@@ -1332,8 +1332,12 @@ venv_activate () {
   cd - >/dev/null
 }
 
+# Note that `deactivate` might be on PATH, e.g.,
+#   /opt/homebrew/Cellar/pyenv-virtualenv/1.2.3/shims/deactivate
+# So only call if it's defined as a shell function.
+# - ALTLY: Check: [ -n "${VIRTUAL_ENV}" ]
 venv_deactivate () {
-  type deactivate >/dev/null 2>&1 && deactivate || true
+  typeset -f deactivate >/dev/null && deactivate || true
 }
 
 # TRACK/2023-10-17 19:36: Using single -q so only warnings or worse printed:
