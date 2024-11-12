@@ -509,7 +509,7 @@ cache_file_ensure_exists () {
     info
 
     UPDEPS_MELD_CMP_LIST=""
-    UPDEPS_CMD_RM_F_LIST=""
+    UPDEPS_CMD_TRUNC_LIST=""
     UPDEPS_GIT_RM_F_LIST=""
 
     # Cleanup old cache files (from failed runs).
@@ -741,7 +741,7 @@ update_local_from_canon () {
                                     $0"
 
     if git status --porcelain=v1 -- "${local_file}" | grep -q -e "^??"; then
-      UPDEPS_CMD_RM_F_LIST+="${local_file} "
+      UPDEPS_CMD_TRUNC_LIST+="${local_file} "
     else
       UPDEPS_GIT_RM_F_LIST+="${local_file} "
     fi
@@ -1464,14 +1464,14 @@ update_faithful_finish () {
   else
     info
     info "└── Finishing update-faithful operation ─── Failed! Please see messages above and try again"
-    if test -n "${UPDEPS_CMD_RM_F_LIST}" \
+    if test -n "${UPDEPS_CMD_TRUNC_LIST}" \
       || test -n "${UPDEPS_GIT_RM_F_LIST}" \
     ; then
       local cleanup_cmd_cpyst""
       local cleanup_git_cpyst""
-      if test -n "${UPDEPS_CMD_RM_F_LIST}"; then
+      if test -n "${UPDEPS_CMD_TRUNC_LIST}"; then
         cleanup_cmd_cpyst="
-                                      truncate -s 0 -- ${UPDEPS_CMD_RM_F_LIST}"
+                                      truncate -s 0 -- ${UPDEPS_CMD_TRUNC_LIST}"
       fi
       if test -n "${UPDEPS_GIT_RM_F_LIST}"; then
         cleanup_git_cpyst="
