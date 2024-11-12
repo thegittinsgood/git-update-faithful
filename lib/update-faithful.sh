@@ -391,7 +391,6 @@ examine_and_update_local_from_canon () {
 
   insist_canon_head_consistent "${canon_head}" "${canon_file_absolute}"
 
-  # If ${file} absent, git-status prints nothing and exits zero.
   has_no_changes "${local_file}" \
     || local_changed=true
 
@@ -596,6 +595,7 @@ cache_file_read_update_status () {
 has_no_changes () {
   local file="$1"
 
+  # If no changes, git-status prints nothing and exits zero.
   test -z "$(git status --porcelain=v1 -- "${file}")"
 }
 
