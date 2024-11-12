@@ -734,22 +734,15 @@ update_local_from_canon () {
   warn_usage_hint_delete_local_profit () {
     warn " │   "
     warn " │ - USAGE: Truncate or delete the local file if you want the latest source (easy!):"
+    warn " │   
+                                    cd \"$(pwd -L)\"
+                                    truncate -s 0 -- \"${local_file}\"
+                                    # Try again!
+                                    $0"
 
     if git status --porcelain=v1 -- "${local_file}" | grep -q -e "^??"; then
-      warn " │   
-                                      cd \"$(pwd -L)\"
-                                      truncate -s 0 -- \"${local_file}\"
-                                      # Try again!
-                                      $0"
-
       UPDEPS_CMD_RM_F_LIST+="${local_file} "
     else
-      warn " │   
-                                      cd \"$(pwd -L)\"
-                                      truncate -s 0 -- \"${local_file}\"
-                                      # Try again!
-                                      $0"
-
       UPDEPS_GIT_RM_F_LIST+="${local_file} "
     fi
   }
