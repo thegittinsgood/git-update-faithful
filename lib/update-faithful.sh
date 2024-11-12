@@ -391,10 +391,11 @@ examine_and_update_local_from_canon () {
 
   insist_canon_head_consistent "${canon_head}" "${canon_file_absolute}"
 
+  # If ${file} absent, empty, or has-no-changes, returns truthy.
   has_no_changes "${local_file}" \
     || local_changed=true
 
-  # If ${file} absent, diff exits nonzero.
+  # If ${local_file} absent or empty, or has-no-diff, returns truthy.
   has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" \
     || local_strayed=true
 
@@ -595,6 +596,11 @@ cache_file_read_update_status () {
 has_no_changes () {
   local file="$1"
 
+  if has_emptiness "${file}"; then
+
+    return 0
+  fi
+
   # If no changes, git-status prints nothing and exits zero.
   test -z "$(git status --porcelain=v1 -- "${file}")"
 }
@@ -606,6 +612,12 @@ has_no_diff () {
   local canon_head="$4"
 
   if ! test -e "${local_file}"; then
+
+    return 0
+  fi
+
+  if has_emptiness "${local_file}"; then
+
     return 0
   fi
 
@@ -630,6 +642,13 @@ has_no_diff () {
   command rm -f -- "${tmp_canon_copy}"
 
   ${_has_no_diff}
+}
+
+# Feature: If user truncates file, indicates they want us to replace it.
+has_emptiness () {
+  local file="$1"
+
+  [ -f "${file}" ] && ! [ -s "${file}" ]
 }
 
 canon_path_show_at_canon_head () {
@@ -714,12 +733,12 @@ update_local_from_canon () {
 
   warn_usage_hint_delete_local_profit () {
     warn " │   "
-    warn " │ - USAGE: Delete the local file if you want the latest source (easy!):"
+    warn " │ - USAGE: Truncate or delete the local file if you want the latest source (easy!):"
 
     if git status --porcelain=v1 -- "${local_file}" | grep -q -e "^??"; then
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      command rm -- \"${local_file}\"
+                                      truncate -s 0 -- \"${local_file}\"
                                       # Try again!
                                       $0"
 
@@ -727,7 +746,7 @@ update_local_from_canon () {
     else
       warn " │   
                                       cd \"$(pwd -L)\"
-                                      command rm -- \"${local_file}\"
+                                      truncate -s 0 -- \"${local_file}\"
                                       # Try again!
                                       $0"
 
@@ -807,10 +826,10 @@ update_local_from_canon () {
 
   local success=false
 
-  if [ ! -e "${local_file}" ]; then
-    # Note you can `git rm "${local_file}"` and not git-commit,
-    # then run update-faithful operation, and it'll commit changes
-    # to canon file.
+  if [ ! -s "${local_file}" ]; then
+    # Note you can `git rm "${local_file}"` or `truncate -s 0 "${local_file}"`,
+    # and skip git-commit, then run update-faithful operation, and it'll copy
+    # and commit latest canon file.
     copy_canon_version "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}"
 
     _stage_follower "baptised"
@@ -1459,11 +1478,11 @@ update_faithful_finish () {
       local cleanup_git_cpyst""
       if test -n "${UPDEPS_CMD_RM_F_LIST}"; then
         cleanup_cmd_cpyst="
-                                      command rm -- ${UPDEPS_CMD_RM_F_LIST}"
+                                      truncate -s 0 -- ${UPDEPS_CMD_RM_F_LIST}"
       fi
       if test -n "${UPDEPS_GIT_RM_F_LIST}"; then
         cleanup_git_cpyst="
-                                      command rm -- ${UPDEPS_GIT_RM_F_LIST}"
+                                      truncate -s 0 -- ${UPDEPS_GIT_RM_F_LIST}"
       fi
       info
       info "    - If you wanna just replace all the conflicts, eh:
