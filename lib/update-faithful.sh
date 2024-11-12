@@ -1499,7 +1499,7 @@ update_faithfuls_commit_changes () {
   local versiony=""
   if command -v git-bump-version-tag > /dev/null; then
     local version
-    version="$(cd "${canon_base_absolute}" && git-bump-version-tag --cur -)"
+    version="$(cd "${canon_base_absolute}" && git-bump-version-tag --cur - 2> /dev/null)"
 
     if [ -z "${version}" ]; then
       version="n/a"
