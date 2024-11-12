@@ -1418,6 +1418,7 @@ update_faithful_finish () {
   local sourcerer="$1"
   local skip_venv_manage="${2:-false}"
   local commit_subject="$3"
+  local source_project="$4"
 
   if ! cache_file_nonempty; then
     cache_file_cleanup
@@ -1437,7 +1438,8 @@ update_faithful_finish () {
         "${cached_head}" \
         "${canon_base_absolute}" \
         "${sourcerer}" \
-        "${commit_subject}"
+        "${commit_subject}" \
+        "${source_project}"
 
       info
       info "└── Finished update-faithful operation ─── Changes committed!"
@@ -1486,8 +1488,9 @@ update_faithfuls_commit_changes () {
   local canon_base_absolute="$2"
   local sourcerer="$3"
   local commit_subject="$4"
+  local source_project="$5"
 
-  local canon_project="$(basename -- "${canon_base_absolute}")"
+  local canon_project="${source_project:-$(basename -- "${canon_base_absolute}")}"
 
   if [ -z "${commit_subject}" ]; then
     commit_subject="${UPDEPS_GENERIC_COMMIT_SUBJECT} <${canon_project}>"
