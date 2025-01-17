@@ -950,12 +950,15 @@ apply_canon_permissions_to_follower () {
   local canon_file_absolute="$2"
 
   # Copy file modes.
-  $(chmod_kludge) --reference="${canon_file_absolute}" -- "${local_file}"
+  $(gnu_chmod) --reference="${canon_file_absolute}" -- "${local_file}"
 }
 
 # Because `chmod --reference` and `chmod -- <>`.
-chmod_kludge () {
-  command -v gchmod || command -v chmod
+gnu_chmod () {
+  for cmd in "gchmod" "chmod"; do
+    ( unset -f ${cmd}; unalias ${cmd}; command -v ${cmd} ) 2> /dev/null \
+      && break
+  done
 }
 
 stage_follower () {
