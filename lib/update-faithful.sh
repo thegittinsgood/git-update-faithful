@@ -37,7 +37,7 @@ UPDEPS_TEMP_PREFIX="update-faithful-sh-"
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-source_deps () {
+source_deps() {
   # Check for coreutils, macOS, or Homebrew `realpath`.
   # - Lowest common denominator is macOS, which supports most basic
   #   usage, e.g., `realpath <path>`, so avoid `realpath -s`, etc.
@@ -51,27 +51,27 @@ source_deps () {
   source_dep_git_put_wise
 }
 
-set_logger_log_level () {
+set_logger_log_level() {
   # Note that LOG_LEVEL unset at first, then logger.sh defaults to
   # LOG_LEVEL_ERROR (40), but we want our `info` messages to shine.
   # - Here we let user override our new default (Debug and higher).
   # - This verifies UF_LOG_LEVEL is an integer. Note the -eq spews
   #   when it fails, e.g.:
   #     bash: [: <foo>: integer expression expected
-  [ -n "${UF_LOG_LEVEL}" ] \
-    && ! [ ${UF_LOG_LEVEL} -eq ${UF_LOG_LEVEL} ] \
-    && >&2 echo "WARNING: Resetting UF_LOG_LEVEL, not an integer" \
-    && export UF_LOG_LEVEL= \
-      || true
+  [ -n "${UF_LOG_LEVEL}" ] &&
+    ! [ ${UF_LOG_LEVEL} -eq ${UF_LOG_LEVEL} ] &&
+    >&2 echo "WARNING: Resetting UF_LOG_LEVEL, not an integer" &&
+    export UF_LOG_LEVEL= ||
+    true
   # Default log level: Debug and higher.
   LOG_LEVEL=${UF_LOG_LEVEL:-${LOG_LEVEL_DEBUG}}
 }
 
 # Optional: git-put-wise, for 'identify_scope_ends_at'.
 #   https://github.com/DepoXy/git-put-wise#🥨
-source_dep_git_put_wise () {
-  command -v git-put-wise > /dev/null \
-    || return 0
+source_dep_git_put_wise() {
+  command -v git-put-wise >/dev/null ||
+    return 0
 
   local put_wise_bin="$(dirname -- "$(realpath -- "$(command -v git-put-wise)")")"
 
@@ -87,17 +87,17 @@ source_dep_git_put_wise () {
 
 # ***
 
-_upful_insist_cmd () {
+_upful_insist_cmd() {
   local cmd_name="$1"
 
-  command -v "${cmd_name}" > /dev/null && return 0
+  command -v "${cmd_name}" >/dev/null && return 0
 
   >&2 echo "ERROR: Missing system command ‘${cmd_name}’."
 
   exit 1
 }
 
-source_dep () {
+source_dep() {
   local dep_path="$1"
 
   # The executables are at bin/*, so project root is one level up.
@@ -109,8 +109,8 @@ source_dep () {
 
   # Walkie talkie die hard.
   while [ ! -f "${try_dep_path}" ]; do
-    test "$(dirname -- "${try_prj_root}")" = "${try_prj_root}" \
-      && break
+    test "$(dirname -- "${try_prj_root}")" = "${try_prj_root}" &&
+      break
 
     try_prj_root="$(dirname -- "${try_prj_root}")"
     try_dep_path="${try_prj_root}/${dep_path}"
@@ -141,11 +141,11 @@ source_dep () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-update-faithful-file () {
+update-faithful-file() {
   update_faithful_file "$@"
 }
 
-update_faithful_file () {
+update_faithful_file() {
   local local_file="$1"
   # Canon paths are optional.
   # - Default canon file relative path same as local_file (a relative path).
@@ -168,7 +168,8 @@ update_faithful_file () {
 
   if ${success} && ! must_pass_checks_and_ensure_cache \
     "${canon_base_absolute}" "${canon_file_absolute}" "${local_file}" \
-  ; then
+    ; then
+
     # Soft-fail. Note that must_pass_checks_and_ensure_cache only returns
     # nonzero if canon file has changes (if anything else wrong, it exits).
     success=false
@@ -176,11 +177,11 @@ update_faithful_file () {
 
   # ***
 
-  ! report_done_if_symlink "${local_file}" \
-    || return 0
+  ! report_done_if_symlink "${local_file}" ||
+    return 0
 
-  ! report_done_if_same_file "${local_file}" "${canon_file_absolute}" \
-    || return 0
+  ! report_done_if_same_file "${local_file}" "${canon_file_absolute}" ||
+    return 0
 
   # ***
 
@@ -189,7 +190,8 @@ update_faithful_file () {
 
   if ${success} && ! examine_and_update_local_from_canon \
     "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" \
-  ; then
+    ; then
+
     success=false
   fi
 
@@ -206,7 +208,7 @@ update_faithful_file () {
 
 # ***
 
-must_pass_checks_and_ensure_cache () {
+must_pass_checks_and_ensure_cache() {
   local canon_base_absolute="$1"
   local canon_file_absolute="$2"
   local local_file="$3"
@@ -258,11 +260,12 @@ must_pass_checks_and_ensure_cache () {
 
 # ***
 
-must_git_nothing_or_only_deletes_staged_or_faithful_update_underway () {
+must_git_nothing_or_only_deletes_staged_or_faithful_update_underway() {
   local is_update_begin="$1"
 
-  ( git_nothing_staged \
-    || cache_file_nonempty \
+  (
+    git_nothing_staged ||
+      cache_file_nonempty
   ) && return 0
 
   # Something is staged, and cache file not started, so this is
@@ -290,21 +293,21 @@ must_git_nothing_or_only_deletes_staged_or_faithful_update_underway () {
   exit 1
 }
 
-git_nothing_staged () {
+git_nothing_staged() {
   git diff --cached --quiet
 }
 
-git_only_delete_files_staged () {
+git_only_delete_files_staged() {
   [ -z "$(git diff --cached --name-status | sed '/^D\t/d')" ]
 }
 
-git_print_staged_files () {
+git_print_staged_files() {
   git --no-pager diff --cached --name-only
 }
 
 # ***
 
-must_canon_base_is_dir () {
+must_canon_base_is_dir() {
   local canon_base_absolute="$1"
 
   if [ ! -d "${canon_base_absolute}" ]; then
@@ -317,7 +320,7 @@ must_canon_base_is_dir () {
   fi
 }
 
-must_be_file () {
+must_be_file() {
   local file="$1"
   local what="$2"
   local absent_ok="${3:-false}"
@@ -326,14 +329,14 @@ must_be_file () {
     >&2 error "ERROR: Please specify the update-faithful ${what} file path"
 
     exit 1
-  elif [ ! -f "${file}" ] && ( ! ${absent_ok} || [ -e "${file}" ] ); then
+  elif [ ! -f "${file}" ] && (! ${absent_ok} || [ -e "${file}" ]); then
     >&2 error "ERROR: The update-faithful ${what} file path is not a file: ${file}"
 
     exit 1
   fi
 }
 
-must_be_file_or_absent () {
+must_be_file_or_absent() {
   local file="$1"
   local what="$2"
 
@@ -345,7 +348,7 @@ must_be_file_or_absent () {
 # ***
 
 # If update-faithful called on a canon project file itself, skip it.
-report_done_if_same_file () {
+report_done_if_same_file() {
   local local_file="$1"
   local canon_file_absolute="$2"
 
@@ -365,7 +368,7 @@ report_done_if_same_file () {
 }
 
 # We don't clobber symlinks (assume user knows what they're doing).
-report_done_if_symlink () {
+report_done_if_symlink() {
   local local_file="$1"
 
   if [ -h "${local_file}" ]; then
@@ -381,7 +384,7 @@ report_done_if_symlink () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-examine_and_update_local_from_canon () {
+examine_and_update_local_from_canon() {
   local local_file="$1"
   local canon_file_absolute="$2"
   local canon_file_relative="$3"
@@ -394,20 +397,20 @@ examine_and_update_local_from_canon () {
   insist_canon_head_consistent "${canon_head}" "${canon_file_absolute}"
 
   # If ${file} absent, empty, or has-no-changes, returns truthy.
-  has_no_changes "${local_file}" \
-    || local_changed=true
+  has_no_changes "${local_file}" ||
+    local_changed=true
 
   # If ${local_file} absent or empty, or has-no-diff, returns truthy.
-  has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" \
-    || local_strayed=true
+  has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head}" ||
+    local_strayed=true
 
   # See if local file matches canon's HEAD version.
   local canon_head_private
   canon_head_private="$(print_head_sha "${canon_file_absolute}")"
 
   if [ "${canon_head}" != "${canon_head_private}" ]; then
-    has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head_private}" \
-      && local_matches_HEAD=true || local_matches_HEAD=false
+    has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${canon_head_private}" &&
+      local_matches_HEAD=true || local_matches_HEAD=false
   fi
 
   # ***
@@ -429,7 +432,7 @@ examine_and_update_local_from_canon () {
 # GPW sourcing, `source_dep_git_put_wise`) and replace with
 # new `git put-wise --scope` command.
 # - But hey, this currently works, why rock the boat.
-print_head_sha () {
+print_head_sha() {
   local any_repo_file_path="$1"
   local use_scoping="${2:-false}"
 
@@ -439,13 +442,13 @@ print_head_sha () {
     local canon_head="HEAD"
 
     # Optional: git-put-wise scope logic.
-    if ${use_scoping} && command -v identify_scope_ends_at > /dev/null; then
+    if ${use_scoping} && command -v identify_scope_ends_at >/dev/null; then
       # Exclude latest commits whose messages start with "PRIVATE: " or
       # "PROTECTED: ". Use case: So you can keep some stuff private to
       # your local repo without needing to maintain a separate feature
       # branch.
-      canon_head="$( \
-        identify_scope_ends_at "^${SCOPING_PREFIX}" "^${PRIVATE_PREFIX}" \
+      canon_head="$(
+        identify_scope_ends_at "^${SCOPING_PREFIX}" "^${PRIVATE_PREFIX}"
       )"
     fi
 
@@ -457,7 +460,7 @@ print_head_sha () {
   )
 }
 
-print_scoped_head () {
+print_scoped_head() {
   local any_repo_file_path="${1:-.}"
 
   local use_scoping=true
@@ -467,17 +470,17 @@ print_scoped_head () {
 
 # ***
 
-insist_canon_head_consistent () {
+insist_canon_head_consistent() {
   local canon_head="$1"
   local canon_file_absolute="$2"
 
-  cache_file_nonempty \
-    || return 0
+  cache_file_nonempty ||
+    return 0
 
   local cached_head="$(cache_file_read_cached_head)"
 
-  test "${canon_head}" != "${cached_head}" \
-    || return 0
+  test "${canon_head}" != "${cached_head}" ||
+    return 0
 
   # We'll leave the repo in its current, failure state,
   # as opposed to cleaning up (`git reset HEAD`, perhaps,
@@ -504,7 +507,7 @@ insist_canon_head_consistent () {
 # ***
 
 # Ensure cache exists, so the `awk` are happy.
-cache_file_ensure_exists () {
+cache_file_ensure_exists() {
   if ! test -e "${UPDEPS_CACHE_FILE}"; then
     info
     info "┌── Starting update-faithful operation ─── Hold onto your butts!"
@@ -530,29 +533,30 @@ cache_file_ensure_exists () {
   touch -- "${UPDEPS_CACHE_FILE}"
 }
 
-cache_file_nonempty () {
+cache_file_nonempty() {
   test -s "${UPDEPS_CACHE_FILE}"
 }
 
-cache_file_cleanup () {
+cache_file_cleanup() {
   # Verify is a partial path name.
-  if [ -d "$(dirname -- "${UPDEPS_CACHE_BASE}")" ] \
-    && [ ! -e "${UPDEPS_CACHE_BASE}" ] \
-  ; then
+  if [ -d "$(dirname -- "${UPDEPS_CACHE_BASE}")" ] &&
+    [ ! -e "${UPDEPS_CACHE_BASE}" ] \
+    ; then
+
     command rm -f -- "${UPDEPS_CACHE_BASE}"*
   fi
 }
 
-cache_file_write () {
+cache_file_write() {
   local canon_head="$1"
   local canon_file_absolute="$2"
 
   local canon_base_absolute="$(print_canon_base_absolute "${canon_file_absolute}")"
 
-  echo -e "${canon_head}\n${canon_base_absolute}" > "${UPDEPS_CACHE_FILE}"
+  echo -e "${canon_head}\n${canon_base_absolute}" >"${UPDEPS_CACHE_FILE}"
 }
 
-cache_file_mark_failed () {
+cache_file_mark_failed() {
   local canon_head="$1"
   local canon_file_absolute="$2"
 
@@ -567,22 +571,22 @@ cache_file_mark_failed () {
     canon_base_absolute="$(cache_file_read_canon_base_absolute)"
   fi
 
-  echo -e "${canon_head}\n${canon_base_absolute}\nfalse" > "${UPDEPS_CACHE_FILE}"
+  echo -e "${canon_head}\n${canon_base_absolute}\nfalse" >"${UPDEPS_CACHE_FILE}"
 }
 
 # Note there's a simple awk command to print a specific line number, e.g.,
 #   awk 'NR==1' "${UPDEPS_CACHE_FILE}"
 # But we'll use printf to avoid exhibiting the newline.
-cache_file_read_cached_head () {
+cache_file_read_cached_head() {
   awk 'NR==1 { printf $0 }' "${UPDEPS_CACHE_FILE}"
 }
 
-cache_file_read_canon_base_absolute () {
+cache_file_read_canon_base_absolute() {
   awk 'NR==2 { printf $0 }' "${UPDEPS_CACHE_FILE}"
 }
 
 # Note cache file might be 2 or 3 lines. If 2 lines, infer status ok.
-cache_file_read_update_status () {
+cache_file_read_update_status() {
   if [ ! -f "${UPDEPS_CACHE_FILE}" ]; then
     printf "true"
 
@@ -595,7 +599,7 @@ cache_file_read_update_status () {
 
 # ***
 
-has_no_changes () {
+has_no_changes() {
   local file="$1"
 
   if has_emptiness "${file}"; then
@@ -607,7 +611,7 @@ has_no_changes () {
   test -z "$(git status --porcelain=v1 -- "${file}")"
 }
 
-has_no_diff () {
+has_no_diff() {
   local local_file="$1"
   local canon_file_absolute="$2"
   local canon_file_relative="$3"
@@ -637,7 +641,7 @@ has_no_diff () {
 
   local _has_no_diff=true
 
-  if ! diff -q "${local_fullpath}" "${tmp_canon_copy}" > /dev/null; then
+  if ! diff -q "${local_fullpath}" "${tmp_canon_copy}" >/dev/null; then
     _has_no_diff=false
   fi
 
@@ -647,13 +651,13 @@ has_no_diff () {
 }
 
 # Feature: If user truncates file, indicates they want us to replace it.
-has_emptiness () {
+has_emptiness() {
   local file="$1"
 
   [ -f "${file}" ] && ! [ -s "${file}" ]
 }
 
-canon_path_show_at_canon_head () {
+canon_path_show_at_canon_head() {
   local canon_file_absolute="$1"
   local canon_file_relative="$2"
   local canon_head="$3"
@@ -696,7 +700,7 @@ canon_path_show_at_canon_head () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-update_local_from_canon () {
+update_local_from_canon() {
   local local_file="$1"
   local canon_file_absolute="$2"
   local canon_file_relative="$3"
@@ -710,7 +714,7 @@ update_local_from_canon () {
 
   # ***
 
-  warn_info_failing () {
+  warn_info_failing() {
     warn_usage_hint_add_meld_compare_cpyst
     warn_usage_hint_delete_local_profit
 
@@ -719,21 +723,21 @@ update_local_from_canon () {
     info
   }
 
-  print_help_indented_scoped_meld () {
+  print_help_indented_scoped_meld() {
     # This is not a simple "meld \"${local_file}\" \"${canon_file_absolute}\" &"
     # because we need the scoped version of the canon file.
-    printf "%s"                      "( cd \"$(dirname -- "${canon_file_absolute}")\" \\
+    printf "%s" "( cd \"$(dirname -- "${canon_file_absolute}")\" \\
                                         && meld \\
                                             <(git show ${short_head}:\"${canon_file_relative}\") \\
                                             \"$(pwd)/${local_file}\") &"
   }
 
-  warn_usage_hint_add_meld_compare_cpyst () {
+  warn_usage_hint_add_meld_compare_cpyst() {
     UPDEPS_MELD_CMP_LIST+="
                                       $(print_help_indented_scoped_meld)"
   }
 
-  warn_usage_hint_delete_local_profit () {
+  warn_usage_hint_delete_local_profit() {
     warn " │   "
     warn " │ - USAGE: Truncate or delete the local file if you want the latest source (easy!):"
     warn " │   
@@ -751,7 +755,7 @@ update_local_from_canon () {
 
   # ***
 
-  warn_diverged_and_uncommitted () {
+  warn_diverged_and_uncommitted() {
     warn
     warn "Cannot update changed and divergent follower file: ${local_file}"
     warn " │ - The follower file has local changes or is not yet committed"
@@ -764,7 +768,7 @@ update_local_from_canon () {
     warn_info_failing
   }
 
-  warn_divergent_and_unbaptised () {
+  warn_divergent_and_unbaptised() {
     warn
     warn "Cannot update divergent follower file: ${local_file}"
     warn " │ - The local file differs from the latest source file,"
@@ -781,7 +785,7 @@ update_local_from_canon () {
     warn_info_failing
   }
 
-  warn_divergent_now_and_previously () {
+  warn_divergent_now_and_previously() {
     warn
     warn "Cannot update divergent follower file: ${local_file}"
     warn " │ - The follower file does not match latest canon source,"
@@ -796,7 +800,7 @@ update_local_from_canon () {
     warn_info_failing
   }
 
-  warn_divergent_from_scoped_head_but_matches_HEAD () {
+  warn_divergent_from_scoped_head_but_matches_HEAD() {
     warn
     warn "Cannot update divergent follower file: ${local_file}"
     warn " │ - The follower file matches latest canon HEAD, but not the"
@@ -811,7 +815,7 @@ update_local_from_canon () {
 
   # ***
 
-  _stage_follower () {
+  _stage_follower() {
     local what_happn="$1"
 
     stage_follower "${local_file}" "${canon_head}" "${canon_file_absolute}" "${what_happn}"
@@ -882,8 +886,8 @@ update_local_from_canon () {
       else
         local local_diverged=false
 
-        has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${prev_canon_head}" \
-          || local_diverged=true
+        has_no_diff "${local_file}" "${canon_file_absolute}" "${canon_file_relative}" "${prev_canon_head}" ||
+          local_diverged=true
 
         if ${local_diverged}; then
           # Local file doesn't match canon head version, or previous
@@ -917,7 +921,7 @@ update_local_from_canon () {
 
 # ***
 
-copy_canon_version () {
+copy_canon_version() {
   local local_file="$1"
   local canon_file_absolute="$2"
   local canon_file_relative="$3"
@@ -945,7 +949,7 @@ copy_canon_version () {
 
 # Note this fcn. not called if only permissions changed, but file contents
 # did not. Remove the local file and run again, should fix it.
-apply_canon_permissions_to_follower () {
+apply_canon_permissions_to_follower() {
   local local_file="$1"
   local canon_file_absolute="$2"
 
@@ -954,14 +958,18 @@ apply_canon_permissions_to_follower () {
 }
 
 # Because `chmod --reference` and `chmod -- <>`.
-gnu_chmod () {
+gnu_chmod() {
   for cmd in "gchmod" "chmod"; do
-    ( unset -f ${cmd}; unalias ${cmd}; command -v ${cmd} ) 2> /dev/null \
-      && break
+    (
+      unset -f ${cmd}
+      unalias ${cmd}
+      command -v ${cmd}
+    ) 2>/dev/null &&
+      break
   done
 }
 
-stage_follower () {
+stage_follower() {
   local local_file="$1"
   local canon_head="$2"
   local canon_file_absolute="$3"
@@ -992,7 +1000,7 @@ stage_follower () {
   print_update_faithful_progress_info "${local_file}" "${what_happn}" "${update_status}"
 }
 
-print_update_faithful_progress_info () {
+print_update_faithful_progress_info() {
   local local_file="$1"
   local what_happn="$2"
   local update_status="$3"
@@ -1015,9 +1023,9 @@ print_update_faithful_progress_info () {
 }
 
 # All because macOS built-in does not support `realpath -s`.
-realpath_s () {
+realpath_s() {
   local local_file="$1"
-  
+
   (
     cd "$(dirname -- "${local_file}")"
 
@@ -1027,7 +1035,7 @@ realpath_s () {
 
 # ***
 
-print_canon_base_absolute () {
+print_canon_base_absolute() {
   local canon_file_absolute="$1"
 
   (
@@ -1037,18 +1045,18 @@ print_canon_base_absolute () {
   )
 }
 
-git_project_root_absolute () {
+git_project_root_absolute() {
   # Same output as git-extras's `git root`.
   git rev-parse --show-toplevel
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-remove-faithful-file () {
+remove-faithful-file() {
   remove_faithful_file "$@"
 }
 
-remove_faithful_file () {
+remove_faithful_file() {
   local local_file="$1"
   local canon_base_absolute="${2:-${UPDEPS_CANON_BASE_ABSOLUTE}}"
 
@@ -1090,11 +1098,11 @@ remove_faithful_file () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-render-faithful-file () {
+render-faithful-file() {
   render_document_from_template "$@"
 }
 
-render_document_from_template () {
+render_document_from_template() {
   local local_file="$1"
   # Akin to update-faithful-file's canon_file_relative, the relative
   # path to the template file from the canon project directory. If
@@ -1114,15 +1122,16 @@ render_document_from_template () {
 
   if ! must_pass_checks_and_ensure_cache \
     "${canon_base_absolute}" "${canon_tmpl_absolute}" "${local_file}" \
-  ; then
+    ; then
+
     # Only fails if canon file has changes (if anything else wrong, exited).
     handle_failed_state "${canon_head}" "${canon_tmpl_absolute}"
 
     return 1
   fi
 
-  ! report_done_if_symlink "${local_file}" \
-    || return 0
+  ! report_done_if_symlink "${local_file}" ||
+    return 0
 
   # For UX purposes, so these few seconds happen at start of updates,
   # callers generally use update-faithful-begin to activate the venv,
@@ -1139,7 +1148,7 @@ render_document_from_template () {
   render_template_localize_sources \
     "${tmp_source_dir}" "${tmp_tmpl_absolute}" \
     "${canon_tmpl_absolute}" "${canon_tmpl_relative}" \
-    "${canon_head}" "${canon_base_absolute}" 
+    "${canon_head}" "${canon_base_absolute}"
 
   # Caller is responsible for generating and providing source data.
 
@@ -1163,7 +1172,7 @@ render_document_from_template () {
   jinja2 \
     "${tmp_tmpl_absolute}" \
     ${src_data_and_format} \
-      > "${local_file}"
+    >"${local_file}"
 
   command rm -rf -- "${tmp_source_dir}"
 
@@ -1192,7 +1201,7 @@ render_document_from_template () {
 #   and recreate the original file names and path (using scoped file versions
 #   per git-wise).
 
-render_template_localize_sources () {
+render_template_localize_sources() {
   local tmp_source_dir="$1"
   local tmp_tmpl_absolute="$2"
   local canon_tmpl_absolute="$3"
@@ -1275,9 +1284,9 @@ render_template_localize_sources () {
   done
 }
 
-print_progress_info_prepared_template () {
+print_progress_info_prepared_template() {
   local tmpl_relative="$1"
-  
+
   local action_preamble="Template file"
   local what_happn="prepared"
 
@@ -1287,20 +1296,21 @@ print_progress_info_prepared_template () {
 
 # ***
 
-venv_activate_and_prepare () {
+venv_activate_and_prepare() {
   local is_beginning=${1:-false}
 
   local cmd_name="jinja2"
 
   # If Python environment looks like one we created, we're good.
-  if python3 -c "import sys; sys.stdout.write(sys.prefix)" \
-    | grep -q -e "${UPDEPS_VENV_PREFIX}" \
-  ; then
+  if python3 -c "import sys; sys.stdout.write(sys.prefix)" |
+    grep -q -e "${UPDEPS_VENV_PREFIX}" \
+    ; then
+
     if ${is_beginning}; then
       info "Our Python venv verified"
     fi
 
-    if ! (_upful_insist_cmd "${cmd_name}" 2> /dev/null); then
+    if ! (_upful_insist_cmd "${cmd_name}" 2>/dev/null); then
       >&2 echo "ERROR: Unexpected path: Our venv, but no ‘${cmd_name}’?"
 
       exit 1
@@ -1310,7 +1320,7 @@ venv_activate_and_prepare () {
   fi
 
   if ! ${UPDEPS_VENV_FORCE}; then
-    if (_upful_insist_cmd "${cmd_name}" 2> /dev/null); then
+    if (_upful_insist_cmd "${cmd_name}" 2>/dev/null); then
       if ${is_beginning}; then
         info "Using local $(font_emphasize "${cmd_name}") 💨"
       fi
@@ -1333,7 +1343,7 @@ venv_activate_and_prepare () {
 
 # REFER: https://gist.github.com/cupdike/6a9caaf18f30250364c8fcf6d64ff22e
 # - BEGET: https://gist.github.com/csinchok/9714005
-venv_activate () {
+venv_activate() {
   local throwaway_dir
   throwaway_dir=$(mktemp -d -t ${UPDEPS_VENV_PREFIX}--venv_activate--XXXX)
 
@@ -1358,7 +1368,7 @@ venv_activate () {
 #   /opt/homebrew/Cellar/pyenv-virtualenv/1.2.3/shims/deactivate
 # So only call if it's defined as a shell function.
 # - ALTLY: Check: [ -n "${VIRTUAL_ENV}" ]
-venv_deactivate () {
+venv_deactivate() {
   typeset -f deactivate >/dev/null && deactivate || true
 }
 
@@ -1379,7 +1389,7 @@ venv_deactivate () {
 #       pip 23.3 from ...
 #       # Does not exhibit warning:
 #       $ pip install -U pip==23.2.1
-venv_install_jinja2_cli () {
+venv_install_jinja2_cli() {
   # Because I want to "\r" cleanup the (temporary) progress message,
   # and because the "latest version of pip" warning seems erroneous,
   # we'll filter it.
@@ -1388,9 +1398,9 @@ venv_install_jinja2_cli () {
 
   local ignore_warning="WARNING: There was an error checking the latest version of pip."
 
-  pip install -q jinja2-cli 2>&1 \
-    | grep -v "${ignore_warning}" \
-    || true
+  pip install -q jinja2-cli 2>&1 |
+    grep -v "${ignore_warning}" ||
+    true
 
   # ALTLY:
   #   python3 -m pip install jinja2-cli
@@ -1403,7 +1413,7 @@ venv_install_jinja2_cli () {
 # Otherwise the first update-faithful-file call ensures
 # that the cache exists, and first render-faithful-file
 # call sets up the venv.
-update-faithful-begin () {
+update-faithful-begin() {
   local canon_base_absolute="${1:-UPDEPS_CANON_BASE_ABSOLUTE}"
   local skip_venv_manage="${2:-false}"
   local tmpl_src_data="${3:-${UPDEPS_TMPL_SRC_DATA}}"
@@ -1427,11 +1437,11 @@ update-faithful-begin () {
 
 # ***
 
-update-faithful-finish () {
+update-faithful-finish() {
   update_faithful_finish "$@"
 }
 
-update_faithful_finish () {
+update_faithful_finish() {
   local sourcerer="$1"
   local skip_venv_manage="${2:-false}"
   local commit_subject="$3"
@@ -1469,9 +1479,9 @@ update_faithful_finish () {
   else
     info
     info "└── Finishing update-faithful operation ─── Failed! Please see messages above and try again"
-    if test -n "${UPDEPS_CMD_TRUNC_LIST}" \
-      || test -n "${UPDEPS_GIT_TRUNC_LIST}" \
-    ; then
+    if test -n "${UPDEPS_CMD_TRUNC_LIST}" ||
+      test -n "${UPDEPS_GIT_TRUNC_LIST}" \
+      ; then
       local cleanup_cmd_cpyst""
       local cleanup_git_cpyst""
       if test -n "${UPDEPS_CMD_TRUNC_LIST}"; then
@@ -1500,7 +1510,7 @@ update_faithful_finish () {
 
 # ***
 
-update_faithfuls_commit_changes () {
+update_faithfuls_commit_changes() {
   local cached_head="$1"
   local canon_base_absolute="$2"
   local sourcerer="$3"
@@ -1514,9 +1524,9 @@ update_faithfuls_commit_changes () {
   fi
 
   local versiony=""
-  if command -v git-bump-version-tag > /dev/null; then
+  if command -v git-bump-version-tag >/dev/null; then
     local version
-    version="$(cd "${canon_base_absolute}" && git-bump-version-tag --cur - 2> /dev/null)"
+    version="$(cd "${canon_base_absolute}" && git-bump-version-tag --cur - 2>/dev/null)"
 
     if [ -z "${version}" ]; then
       version="n/a"
@@ -1541,8 +1551,8 @@ ${commit_subject}
 
 - Commit generated by:
 
-    https://github.com/thegittinsgood/git-update-faithful#⛲${sourcery}" \
-    | git commit -q -F -
+    https://github.com/thegittinsgood/git-update-faithful#⛲${sourcery}" |
+    git commit -q -F -
 }
 
 # The latest update-faithful commit looks something like this:
@@ -1550,20 +1560,20 @@ ${commit_subject}
 #   Deps: Update faithfuls
 #
 #   - Source: easy-as-pypi @ 0477f4de66eb [1.2.3]
-latest_commit_read_canon_head () {
+latest_commit_read_canon_head() {
   local local_file="$1"
 
   # USYNC: The "- Source" commit line above, and the 2 sed commands.
-  git --no-pager log --format=%B -n 1 -- "${local_file}" \
-    | head -3 \
-    | tail -1 \
-    | sed '/^- Source: .* @ /!d' \
-    | sed 's/^- Source: .* @ \([[:alnum:]]\+\).*$/\1/'
+  git --no-pager log --format=%B -n 1 -- "${local_file}" |
+    head -3 |
+    tail -1 |
+    sed '/^- Source: .* @ /!d' |
+    sed 's/^- Source: .* @ \([[:alnum:]]\+\).*$/\1/'
 }
 
 # ***
 
-handle_failed_state () {
+handle_failed_state() {
   local canon_head="$1"
   local canon_file_absolute="$2"
 
@@ -1573,7 +1583,7 @@ handle_failed_state () {
   # user can fix everything and will find success on their second run.
   cache_file_mark_failed "${canon_head}" "${canon_file_absolute}"
 
-  git reset HEAD > /dev/null
+  git reset HEAD >/dev/null
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -1586,23 +1596,23 @@ handle_failed_state () {
 # "appends a command to a trap
 #  - 1st arg: code to add
 #  - remaining args: names of traps to modify"
-trap_add () {
+trap_add() {
   trap_add_cmd="$1"
 
-  shift \
-    || fatal "${FUNCNAME} usage error"
+  shift ||
+    fatal "${FUNCNAME} usage error"
 
   for trap_add_name in "$@"; do
     trap -- "$(
       # helper fn to get existing trap command from output
       # of trap -p
-      extract_trap_cmd () { printf '%s\n' "$3"; }
+      extract_trap_cmd() { printf '%s\n' "$3"; }
       # print existing trap command with newline
       eval "extract_trap_cmd $(trap -p "${trap_add_name}")"
       # print the new trap command
       printf '%s\n' "${trap_add_cmd}"
-    )" "${trap_add_name}" \
-      || fatal "unable to add to trap ${trap_add_name}"
+    )" "${trap_add_name}" ||
+      fatal "unable to add to trap ${trap_add_name}"
   done
 }
 
@@ -1616,21 +1626,20 @@ declare -f -t trap_add
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-font_emphasize () {
+font_emphasize() {
   echo "$(attr_emphasis)${1}$(attr_reset)"
 }
 
-font_highlight () {
+font_highlight() {
   echo "$(fg_lightorange)${1}$(attr_reset)"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-main () {
+main() {
   source_deps
 }
 
 main "$@"
 unset -f main
 unset -f source_deps
-
