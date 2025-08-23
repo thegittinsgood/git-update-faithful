@@ -637,7 +637,8 @@ has_no_diff() {
     "${canon_file_absolute}" \
     "${canon_file_relative}" \
     "${canon_head}" \
-    "${tmp_canon_copy}"
+    "${tmp_canon_copy}" \
+    "${local_file}"
 
   local _has_no_diff=true
 
@@ -662,16 +663,61 @@ canon_path_show_at_canon_head() {
   local canon_file_relative="$2"
   local canon_head="$3"
   local dest_file="$4"
+  local local_file="$5"
 
-  cd "$(dirname -- "${canon_file_absolute}")"
+  local before_cd="$(pwd -L)"
+
+  cd -- "$(dirname -- "${canon_file_absolute}")"
+
+  # SAVVY: Note that git-show's working dir is project (.git/) root, not our subdir,
+  # so we can work from subdir.
+  # - But for [ -s $local_file ] to work, we must change to project root.
+  cd -- "$(git_project_root)"
+
+  local retcode=0
+
+  local canon_file_path="${canon_file_relative}"
+
+  local tmp_stderr
+  tmp_stderr="$(mktemp -t ${UPDEPS_TEMP_PREFIX}XXXX)"
 
   # Note that git-show uses the root-relative path, regardless of curr. dir.
-  git show ${canon_head}:"${canon_file_relative}" > "${dest_file}"
+  git show ${canon_head}:"${canon_file_path}" >"${dest_file}" 2>"${tmp_stderr}"
+  retcode=$?
 
-  if [ $? -ne 0 ]; then
+  if [ ${retcode} -ne 0 ] && [ -f "${local_file}" ]; then
+    # This path *solely* to accomodate user *moving* canon file in reference
+    # project.
+    # - E.g., calling `update-faithful-file "some/path"` uses same path in
+    #   both target and reference projects.
+    #   - But then if user moves upstream path to "new/path" and then user
+    #     calls `update-faithful-file "some/path" "new/path"`, the old
+    #     target project "Deps: Update faithfuls" commit's commit hash
+    #     references the reference projects' original some/path commit,
+    #     and probably doesn't account for new/path.
+    #   - So this fallback supports user moving canon file in reference
+    #     project...
+    #     - Though really I wonder if it'd be better to add some sort of
+    #       *rename* or even *delete* operation to update-faithful, because
+    #       currently those operations are not well-supported (as evidenced,
+    #       for one, by this kludge!).
+    >&2 warn "ERROR: git-show failed:"
+    >&2 warn
+    >&2 warn "  git show ${canon_head}:\"${canon_file_path}\""
+    >&2 warn
+    >&2 warn "- AGAIN: Trying local (target) path: ${local_file}"
+    >&2 warn
+
+    canon_file_path="${local_file}"
+
+    git show ${canon_head}:"${canon_file_path}" >"${dest_file}" 2>"${tmp_stderr}"
+    retcode=$?
+  fi
+
+  if [ ${retcode} -ne 0 ]; then
     >&2 error "ERROR: git-show failed:"
     >&2 error
-    >&2 error "  git show ${canon_head}:\"${canon_file_relative}\""
+    >&2 error "  git show ${canon_head}:\"${canon_file_path}\""
     >&2 error
     >&2 error "- HINT: Perhaps you need to commit the file?"
     # TRACK/2023-11-14: git-show failed on me, but worked on next run.
@@ -687,15 +733,25 @@ canon_path_show_at_canon_head() {
     #       we would have saved the error > to the file). (We'd also
     #       have to move the `exit 1` here to each of the callers.)
     >&2 warn
-    >&2 warn "- Following is the git-show stdout:"
-    >&2 warn
-    >&2 cat "${dest_file}"
-    >&2 warn
+    if [ -s "${dest_file}" ]; then
+      >&2 warn "- Following is the git-show stdout:"
+      >&2 warn
+      >&2 cat "${dest_file}"
+      >&2 warn
+    fi
+    if [ -n "${tmp_stderr}" ]; then
+      >&2 warn "- Following is the git-show stderr:"
+      >&2 warn
+      >&2 warn "$(cat "${tmp_stderr}")"
+      >&2 warn
+    fi
 
     exit 1
   fi
 
-  cd - >/dev/null
+  cd -- "${before_cd}"
+
+  command rm -f -- "${tmp_stderr}"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -940,7 +996,8 @@ copy_canon_version() {
     "${canon_file_absolute}" \
     "${canon_file_relative}" \
     "${canon_head}" \
-    "${tmp_canon_copy}"
+    "${tmp_canon_copy}" \
+    "${local_file}"
 
   command mv -f -- "${tmp_canon_copy}" "${local_file}"
 
