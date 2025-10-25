@@ -576,7 +576,7 @@ cache_file_mark_failed() {
 
 # Note there's a simple awk command to print a specific line number, e.g.,
 #   awk 'NR==1' "${UPDEPS_CACHE_FILE}"
-# But we'll use printf to avoid exhibiting the newline.
+# But we'll use printf to avoid emitting the newline.
 cache_file_read_cached_head() {
   awk 'NR==1 { printf $0 }' "${UPDEPS_CACHE_FILE}"
 }
