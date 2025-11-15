@@ -617,15 +617,18 @@ has_no_diff() {
   local canon_file_relative="$3"
   local canon_head="$4"
 
-  if ! test -e "${local_file}"; then
+  is_absent_or_empty_local_file() {
+    if ! test -e "${local_file}"; then
 
-    return 0
-  fi
+      return 0
+    fi
 
-  if has_emptiness "${local_file}"; then
+    if has_emptiness "${local_file}"; then
 
-    return 0
-  fi
+      return 0
+    fi
+  }
+  is_absent_or_empty_local_file
 
   local local_fullpath
   local_fullpath="$(realpath "${local_file}")"
