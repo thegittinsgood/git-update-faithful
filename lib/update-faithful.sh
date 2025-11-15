@@ -641,11 +641,15 @@ has_no_diff() {
     "${canon_file_relative}" \
     "${canon_head}" \
     "${tmp_canon_copy}" \
-    "${local_file}"
+    "${local_file}" \
+    "${UPDEPS_IGNORE_INVALID_OBJECT:-false}"
 
   local _has_no_diff=true
 
-  if ! diff -q "${local_fullpath}" "${tmp_canon_copy}" >/dev/null; then
+  if ! is_absent_or_empty_local_file &&
+    ! diff -q "${local_fullpath}" "${tmp_canon_copy}" >/dev/null \
+    ; then
+
     _has_no_diff=false
   fi
 
@@ -667,6 +671,7 @@ canon_path_show_at_canon_head() {
   local canon_head="$3"
   local dest_file="$4"
   local local_file="$5"
+  local updeps_ignore_invalid_object="${6:-false}"
 
   local before_cd="$(pwd -L)"
 
@@ -691,7 +696,7 @@ canon_path_show_at_canon_head() {
   log_git_show_failed() {
     local log_level="${1:-warn}"
 
-    >&2 ${log_level} "ERROR: git-show failed:"
+    >&2 ${log_level} "$(test "${log_level}" = "error" && echo "ERROR" || echo "ALERT"): git-show failed:"
     >&2 ${log_level}
     >&2 ${log_level} "    cd $(pwd)"
     >&2 ${log_level} "    git show ${canon_head}:\"${canon_file_path}\""
@@ -736,6 +741,45 @@ canon_path_show_at_canon_head() {
 
     git show ${canon_head}:"${canon_file_path}" >"${dest_file}" 2>"${tmp_stderr}"
     retcode=$?
+  elif [ ${retcode} -ne 0 ] &&
+    cat -- "${tmp_stderr}" | grep -q -e "^fatal: invalid object name " \
+    ; then
+    # This path happens if you previously ran update_faithful_file, but
+    # then refactored the upstream project such that the reference SHA
+    # from the update faithful commit is no longer valid.
+    # - The git-show error message is, e.g.
+    #   fatal: invalid object name '2d72e39e1515'.
+    local prev_update_faithful_object
+    prev_update_faithful_object="$(
+      cd -- "${before_cd}"
+      git_sha_shorten "$(
+        git --no-pager log --format=%H -n 1 -- "${local_file}"
+      )"
+    )"
+    log_git_show_failed "$(${updeps_ignore_invalid_object} && echo warn || echo error)"
+    >&2 warn "- You likely refactored the upstream project after the previous"
+    >&2 warn "  update-faithful. This abandoned the reference object recorded"
+    >&2 warn "  in the previous update-faithful commit message (${prev_update_faithful_object})"
+    >&2 warn
+    log_print_git_show_stderr
+    if ! ${updeps_ignore_invalid_object}; then
+      >&2 warn "- USAGE: To proceed, run again with the following setting:"
+      >&2 warn
+      >&2 warn "    UPDEPS_IGNORE_INVALID_OBJECT=true update_faithful_file ..."
+      >&2 warn
+      >&2 warn "  - ALTLY: Alternatively, remove the local dependency file:"
+      >&2 warn
+      >&2 warn "    rm -- \"${local_file}\""
+
+      exit 1
+    else
+      >&2 warn "- Per UPDEPS_IGNORE_INVALID_OBJECT=true, ignoring this discrepency."
+
+      cd -- "${before_cd}"
+      command rm -f -- "${local_file}"
+
+      retcode=0
+    fi
   fi
 
   if [ ${retcode} -ne 0 ]; then
