@@ -757,6 +757,7 @@ canon_path_show_at_canon_head() {
     if [ -n "${tmp_stderr}" ]; then
       log_print_git_show_stderr
     fi
+    command rm -f -- "${tmp_stderr}"
 
     exit 1
   fi
