@@ -738,13 +738,13 @@ canon_path_show_at_canon_head() {
     if [ -s "${dest_file}" ]; then
       >&2 warn "- Following is the git-show stdout:"
       >&2 warn
-      >&2 cat "${dest_file}"
+      cat "${dest_file}" | >&2 sed 's/^/  /'
       >&2 warn
     fi
     if [ -n "${tmp_stderr}" ]; then
       >&2 warn "- Following is the git-show stderr:"
       >&2 warn
-      >&2 warn "$(cat "${tmp_stderr}")"
+      >&2 warn "$(cat "${tmp_stderr}" | sed 's/^/  /')"
       >&2 warn
     fi
 
