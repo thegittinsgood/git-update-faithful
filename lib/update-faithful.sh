@@ -685,6 +685,16 @@ canon_path_show_at_canon_head() {
   git show ${canon_head}:"${canon_file_path}" >"${dest_file}" 2>"${tmp_stderr}"
   retcode=$?
 
+  log_git_show_failed() {
+    local log_level="${1:-warn}"
+
+    >&2 ${log_level} "ERROR: git-show failed:"
+    >&2 ${log_level}
+    >&2 ${log_level} "  cd $(pwd)"
+    >&2 ${log_level} "  git show ${canon_head}:\"${canon_file_path}\""
+    >&2 ${log_level}
+  }
+
   if [ ${retcode} -ne 0 ] && [ -f "${local_file}" ]; then
     # This path *solely* to accomodate user *moving* canon file in reference
     # project.
@@ -701,11 +711,7 @@ canon_path_show_at_canon_head() {
     #       *rename* or even *delete* operation to update-faithful, because
     #       currently those operations are not well-supported (as evidenced,
     #       for one, by this kludge!).
-    >&2 warn "ERROR: git-show failed:"
-    >&2 warn
-    >&2 warn "  cd $(pwd)"
-    >&2 warn "  git show ${canon_head}:\"${canon_file_path}\""
-    >&2 warn
+    log_git_show_failed warn
     >&2 warn "- AGAIN: Trying local (target) path: ${local_file}"
     >&2 warn
 
@@ -716,11 +722,7 @@ canon_path_show_at_canon_head() {
   fi
 
   if [ ${retcode} -ne 0 ]; then
-    >&2 error "ERROR: git-show failed:"
-    >&2 error
-    >&2 error "  cd $(pwd)"
-    >&2 error "  git show ${canon_head}:\"${canon_file_path}\""
-    >&2 error
+    log_git_show_failed error
     >&2 error "- HINT: Perhaps you need to commit the file?"
     # TRACK/2023-11-14: git-show failed on me, but worked on next run.
     # - But there was not enough error output to diagnose.
