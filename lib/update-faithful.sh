@@ -690,9 +690,23 @@ canon_path_show_at_canon_head() {
 
     >&2 ${log_level} "ERROR: git-show failed:"
     >&2 ${log_level}
-    >&2 ${log_level} "  cd $(pwd)"
-    >&2 ${log_level} "  git show ${canon_head}:\"${canon_file_path}\""
+    >&2 ${log_level} "    cd $(pwd)"
+    >&2 ${log_level} "    git show ${canon_head}:\"${canon_file_path}\""
     >&2 ${log_level}
+  }
+
+  log_print_git_show_stdout() {
+    >&2 warn "- Following is the git-show stdout:"
+    >&2 warn
+    cat -- "${dest_file}" | >&2 sed 's/^/    /'
+    >&2 warn
+  }
+
+  log_print_git_show_stderr() {
+    >&2 warn "- Following is the git-show stderr:"
+    >&2 warn
+    >&2 warn "$(cat -- "${tmp_stderr}" | sed 's/^/    /')"
+    >&2 warn
   }
 
   if [ ${retcode} -ne 0 ] && [ -f "${local_file}" ]; then
@@ -738,16 +752,10 @@ canon_path_show_at_canon_head() {
     #       have to move the `exit 1` here to each of the callers.)
     >&2 warn
     if [ -s "${dest_file}" ]; then
-      >&2 warn "- Following is the git-show stdout:"
-      >&2 warn
-      cat "${dest_file}" | >&2 sed 's/^/  /'
-      >&2 warn
+      log_print_git_show_stdout
     fi
     if [ -n "${tmp_stderr}" ]; then
-      >&2 warn "- Following is the git-show stderr:"
-      >&2 warn
-      >&2 warn "$(cat "${tmp_stderr}" | sed 's/^/  /')"
-      >&2 warn
+      log_print_git_show_stderr
     fi
 
     exit 1
