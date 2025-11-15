@@ -703,6 +703,7 @@ canon_path_show_at_canon_head() {
     #       for one, by this kludge!).
     >&2 warn "ERROR: git-show failed:"
     >&2 warn
+    >&2 warn "  cd $(pwd)"
     >&2 warn "  git show ${canon_head}:\"${canon_file_path}\""
     >&2 warn
     >&2 warn "- AGAIN: Trying local (target) path: ${local_file}"
@@ -717,6 +718,7 @@ canon_path_show_at_canon_head() {
   if [ ${retcode} -ne 0 ]; then
     >&2 error "ERROR: git-show failed:"
     >&2 error
+    >&2 error "  cd $(pwd)"
     >&2 error "  git show ${canon_head}:\"${canon_file_path}\""
     >&2 error
     >&2 error "- HINT: Perhaps you need to commit the file?"
