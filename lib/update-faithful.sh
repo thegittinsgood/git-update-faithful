@@ -10,6 +10,7 @@
 # before the final commit action.
 UPDEPS_CACHE_BASE="${UPDEPS_CACHE_BASE:-${UPDEPS_CACHE_DIR:-.git}/ohmyrepos-update-faithful-cache-}"
 # The cache contains PID of process or parent, depending.
+# - Some callers will source this file, and change this path to use $PPID.
 UPDEPS_CACHE_FILE="${UPDEPS_CACHE_FILE:-${UPDEPS_CACHE_BASE}$$}"
 
 # Call either set these directly or pass to update-faithful-begin.
